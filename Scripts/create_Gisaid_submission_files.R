@@ -40,7 +40,7 @@ BN <- suppressWarnings(read_excel("/home/docker/Fastq/Influensa/2021/Spørringsf
   select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7,
          SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE,
          SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT) %>%
-  rename("Dekning_Artic" = PROSENTDEKNING_GENOM, 
+  rename("Dekning_Artic" = PROSENTDEKNING_GENOM,
          "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
          "Dekning_Nano" = DEKNING_NANOPORE))
 
@@ -310,7 +310,7 @@ if (platform == "Swift_FHI"){
   metadata <- metadata %>% select(-INNSENDER)
 
   # Write csv file
-  write_csv(metadata, file = opt$metadata)
+  write_csv(metadata, file = paste0("/home/docker/Out/", opt$metadata))
 
 
   #### Make fasta file ####
@@ -376,7 +376,7 @@ if (platform == "Swift_FHI"){
     rename(`seq.name` = covv_virus_name)
 
   # Lagre fastafilen
-  dat2fasta(fastas, outfile = fasta_filename)
+  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
 } else if (platform == "Swift_MIK") {
   print ("Platform is Swift MIK")
   # Swift MIK/OUS------------------------------------------------------------
@@ -547,7 +547,7 @@ if (platform == "Swift_FHI"){
            seq.text)
 
   # Lagre fastafilen
-  dat2fasta(fastas, outfile = fasta_filename)
+  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
 } else if (platform == "Artic_Illumina") {
   print ("Platform is Artic Illumina")
   # Artic Illumina ----------------------------------------------------------
@@ -723,7 +723,7 @@ if (platform == "Swift_FHI"){
            seq.text)
 
   # Lagre fastafilen
-  dat2fasta(fastas, outfile = fasta_filename)
+  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
 } else if (platform == "Artic_Nanopore") {
   print ("Platform is Artic Nanopore")
   # Artic Nanopore ----------------------------------------------------------
@@ -902,5 +902,5 @@ if (platform == "Swift_FHI"){
            seq.text)
 
   # Lagre fastafilen
-  dat2fasta(fastas, outfile = fasta_filename)
+  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
 }
