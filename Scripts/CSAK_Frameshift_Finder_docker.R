@@ -109,7 +109,12 @@ if(length(database)>0){
     dummy.dels<-gsub(" ","",unlist(base::strsplit(df$Deletions[i],"/")))
     
     if(length(dummy.ins[which(dummy.ins %in% insertion.list)])!=length(dummy.ins) & dummy.ins[1]!="NO"){
-      df$Comments[i]<-paste("Unknown insertion/s detected at", paste(dummy.ins[-which(dummy.ins %in% insertion.list)], collapse = ";"))
+      
+      if(length(dummy.ins)>1){ 
+        df$Comments[i]<-paste("Unknown insertion/s detected at", paste(dummy.ins[-which(dummy.ins %in% insertion.list)], collapse = ";"))
+      }else{
+        df$Comments[i]<-paste("Unknown insertion/s detected at", dummy.ins)
+      }
       
     }
     
@@ -132,15 +137,35 @@ if(length(database)>0){
       df$Ready[i]<-"YES"
       df$Comments[i]<-"All frameshifts are OK"
     }
-    
+    #INS OK / DELS Ok
     if(length(dummy.dels)>0){
-      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])==length(dummy.dels)){
+      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])==length(dummy.dels) & is.na(df$Comments[i]) ){
         df$Ready[i]<-"YES"
         df$Comments[i]<-"All frameshifts are OK"
-      }else{
-        df$Ready[i]<-"NO"
-        df$Comments[i]<-paste(df$Comments[i], paste("Unknown deletions/s detected at", paste(dummy.dels[-which(dummy.dels %in% deletion.list)], collapse = ";")), sep = " & ")
       }
+      #INS OK /DELS KO
+      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])!=length(dummy.dels) & is.na(df$Comments[i]) ){
+        df$Ready[i]<-"NO"
+        if(length(dummy.dels)>1){ 
+          df$Comments[i]<-paste("Unknown deletions/s detected at", paste(dummy.dels[-which(dummy.dels %in% deletion.list)], collapse = ";"))
+        }else{
+          df$Comments[i]<-paste("Unknown deletions/s detected at", dummy.dels)
+        }
+      }
+      
+      #INS KO /DELS KO
+      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])!=length(dummy.dels) & !is.na(df$Comments[i]) ){
+        df$Ready[i]<-"NO"
+        if(length(dummy.dels)>1){ 
+          df$Comments[i]<-paste(df$Comments[i], "&", paste("Unknown deletions/s detected at", paste(dummy.dels[-which(dummy.dels %in% deletion.list)], collapse = ";")))
+        }else{
+          df$Comments[i]<-paste(df$Comments[i], "&", paste("Unknown deletions/s detected at", dummy.dels))
+        }
+      }
+      
+      
+      
+      
       
     }
   }
