@@ -878,7 +878,8 @@ if (platform == "Swift_FHI"){
   fastas <- fastas %>%
     # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
     mutate(tmp = gsub("_.*", "", seq.name)) %>%
-    mutate(KEY = str_sub(tmp, start = 1, end = -1))
+    # NB: Removing last digit from number in file name
+    mutate(KEY = str_sub(tmp, start = 1, end = -2))
 
   # Sett Virus name som fasta header
   # Først lage en mapping mellom KEY og virus name
