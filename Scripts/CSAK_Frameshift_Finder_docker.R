@@ -3,6 +3,7 @@
 
 library(seqinr)
 library(writexl)
+library(readxl)
 
 args=commandArgs(TRUE)
  cores<-10
@@ -15,9 +16,15 @@ if(length(args)==0){
 #Docker
  results <-"/home/docker/Fastq/"   #Docker
  results<-list.dirs(results)
+ if(length(grep("Frameshift",results))>0){
  results<-results[grep("Frameshift",results)]
  results<-paste(results,"/",sep = "")
-result.folder <-results   #Docker
+ result.folder <-results   #Docker
+  }else{
+    result.folder <- "/home/docker/Fastq/"
+ }
+
+
 common.folder <-"/home/docker/CommonFiles/"
 source("/home/docker/Scripts/CSAK_DeletionFinder_v05.R")
 
@@ -95,6 +102,8 @@ if(length(database)>0){
   df.ready$Ready<-"YES"
   df.ready$Comments<-"No frameshifts detected"
   
+  if(length(which(df$Frameshift=="YES"))>0){
+  
   df<-df[which(df$Frameshift=="YES"),]
   df$Ready<-"NO"
   df$Comments<-NA
@@ -105,6 +114,7 @@ if(length(database)>0){
   deletion.list<-gsub(".*: ","",indels$ID[grep("Deletion",indels$ID)])
   
   for (i in 1:nrow(df)) {
+    flag<-NA
     dummy.ins<-gsub(" ","",unlist(base::strsplit(df$Insertions[i],"/")))
     dummy.dels<-gsub(" ","",unlist(base::strsplit(df$Deletions[i],"/")))
     
@@ -112,10 +122,16 @@ if(length(database)>0){
       
       if(length(dummy.ins)>1){ 
         df$Comments[i]<-paste("Unknown insertion/s detected at", paste(dummy.ins[-which(dummy.ins %in% insertion.list)], collapse = ";"))
+        if(length(which(dummy.ins %in% insertion.list))==0){
+        df$Comments[i]<-paste("Unknown insertion/s detected at", paste(dummy.ins,collapse = ","))
+        }
+        
       }else{
         df$Comments[i]<-paste("Unknown insertion/s detected at", dummy.ins)
       }
-      
+      flag<-"InsKO"
+    }else{
+      flag<-"InsOK"
     }
     
     to.clean<-dummy.dels[grep(";", dummy.dels)]
@@ -137,24 +153,31 @@ if(length(database)>0){
       df$Ready[i]<-"YES"
       df$Comments[i]<-"All frameshifts are OK"
     }
+    
     #INS OK / DELS Ok
     if(length(dummy.dels)>0){
-      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])==length(dummy.dels) & is.na(df$Comments[i]) ){
+      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])==length(dummy.dels) & flag=="InsOK" ){
         df$Ready[i]<-"YES"
         df$Comments[i]<-"All frameshifts are OK"
       }
+      
       #INS OK /DELS KO
-      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])!=length(dummy.dels) & is.na(df$Comments[i]) ){
+      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])!=length(dummy.dels) & flag=="InsOK" ){
         df$Ready[i]<-"NO"
         if(length(dummy.dels)>1){ 
+          if(length(which(dummy.dels %in% deletion.list))>0){
           df$Comments[i]<-paste("Unknown deletions/s detected at", paste(dummy.dels[-which(dummy.dels %in% deletion.list)], collapse = ";"))
+          }else{
+            df$Comments[i]<-paste("Unknown deletions/s detected at", paste(dummy.dels,collapse = ","))
+          }
         }else{
           df$Comments[i]<-paste("Unknown deletions/s detected at", dummy.dels)
         }
+        flag<-"InsOK_DelKO"
       }
       
       #INS KO /DELS KO
-      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])!=length(dummy.dels) & !is.na(df$Comments[i]) ){
+      if(length(dummy.dels[which(dummy.dels %in% deletion.list)])!=length(dummy.dels) & flag=="InsKO" ){
         df$Ready[i]<-"NO"
         if(length(dummy.dels)>1){ 
           df$Comments[i]<-paste(df$Comments[i], "&", paste("Unknown deletions/s detected at", paste(dummy.dels[-which(dummy.dels %in% deletion.list)], collapse = ";")))
@@ -169,9 +192,12 @@ if(length(database)>0){
       
     }
   }
-  
   df$Comments<-gsub("NA & ","",df$Comments)
   df<-rbind(df, df.ready)
+  }else{
+    df<-df.ready
+  }
+  
   write_xlsx(df,inputfile)
   
 }
