@@ -8,14 +8,14 @@ option_list <- list(
               help="Type platform. Må være enten: Swift_FHI, Swift_MIK, Artic_Illumina, Artic_Nanopore", metavar="character"),
   make_option(c("-o", "--oppsett"), type = "character", default = NULL,
               help = "Navn på plate/oppsett. Må tilsvare mappenavn. F.eks. FHI133 for Swift_FHI, MIK172 for Swift_MIK, 646 for Artic_Illumina eller Nr134A/Nano for Artic_Nanopore", metavar = "character"),
-  make_option(c("-d", "--drop"), type="character", default=NULL,
-              help="Samples to drop (e.g. due to frameshift). Must be on the format of 252116806,252116930,252116980 and match the BN Key", metavar="character"),
   make_option(c("-s", "--specimen"), type="character", default="Unknown",
               help="Type prøvemateriale. E.g. \"Upper respiratory swab\" [default= %default]", metavar="character"),
   make_option(c("-f", "--fasta"), type="character", default="out_fasta.fasta",
               help="Navn på fasta-fil som skal submittes. F.eks. FHI133.fasta [default= %default]", metavar="character"),
   make_option(c("-m", "--metadata"), type="character", default="FHI133.csv",
-              help="Navn på metadata-fil som skal submittes. F.eks. FHI133.csv [default= %default]", metavar="character")
+              help="Navn på metadata-fil som skal submittes. F.eks. FHI133.csv [default= %default]", metavar="character"),
+  make_option(c("-S", "--submitter"), type="character", default=NULL,
+              help="Gisaid brukernavn til den som submitter. F.eks. jonbra", metavar="character")
 );
 
 opt_parser <- OptionParser(option_list=option_list);
@@ -24,13 +24,6 @@ opt <- parse_args(opt_parser);
 if (is.null(opt$platform)){
   print_help(opt_parser)
   stop("At least one argument must be supplied", call.=FALSE)
-}
-
-# Hvis ingen prøver skal droppes, settes til "none"
-if (!is.null(opt$drop)){
-  drop <- stringr::str_split(opt$drop, ",", simplify = TRUE)
-} else if (is.null(opt$drop)) {
-  drop <- "none"
 }
 
 # Trekke ut KEYs fra BN ---------------------------------------------------
@@ -53,7 +46,7 @@ platform <- opt$platform
 oppsett <- opt$oppsett
 
 # Add fixed columns for metadata
-submitter <- "jonbra"
+submitter <- opt$submitter
 type <- "betacoronavirus"
 passage <- "original"
 host <- "Human"
@@ -201,13 +194,61 @@ lookup_function <- function(metadata) {
   return(metadata)
 }
 
+
+# Define drop FS from fasta function --------------------------------------
+# Remove any samples with bad FS
+Drop_FS_from_fasta <- function(fastas) {
+  
+  FS_file <- list.files(path = "Frameshift/",
+             pattern = "*.xlsx",
+             full.names = T)
+
+  FS <- read_excel(FS_file)
+
+  # Define samples to keep (i.e. with OK FS)
+  FS_OK <- FS %>% 
+    filter(Ready == "YES") %>% 
+    rename(`seq.name` = "Sample")
+  
+  # Rename navn til å matche navn i fastas
+  # Join fastas with FS to keep
+  fastas <- left_join(FS_OK, fastas, by = "seq.name") %>% 
+    select(`seq.name`, `seq.text`)
+  
+  return(fastas)
+}
+
+# Define drop FS from metadata function -----------------------------------
+# Drop the same samples from the metadata file
+Drop_FS_from_metadata <- function(metadata) {
+  
+  FS_file <- list.files(path = "Frameshift/",
+                        pattern = "*.xlsx",
+                        full.names = T)
+  
+  FS <- read_excel(FS_file)
+  
+  # Define samples to keep (i.e. with OK FS)
+  FS_OK <- FS %>% 
+    filter(Ready == "YES") %>% 
+    rename("covv_virus_name" = "Sample")
+  
+  # Rename navn til å matche navn i fastas
+  # Join fastas with FS to keep
+  metadata <- left_join(FS_OK, metadata, by = "covv_virus_name") %>% 
+    select(-Deletions, -Frameshift, -Insertions, -Ready, -Comments)
+  
+  return(metadata)
+}
+
+
 # Start script ------------------------------------------------------------
 
 if (platform == "Swift_FHI"){
   print ("Platform is Swift FHI")
   # Swift FHI ---------------------------------------------------------------
 
-  #### Trekke ut sekvenser ####
+  #### Trekke ut prøver ####
 
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
@@ -219,12 +260,7 @@ if (platform == "Swift_FHI"){
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN))
 
-  # Fjerne keys pga frameshift
-  suppressWarnings(
-  if (drop != "none"){
-    oppsett_details <- oppsett_details[!(oppsett_details$KEY %in% drop),]
-  }
-  )
+  
   #### Lage metadata ####
 
   # Add platform-specific columns.
@@ -309,10 +345,6 @@ if (platform == "Swift_FHI"){
   # Remove column INNSENDER
   metadata <- metadata %>% select(-INNSENDER)
 
-  # Write csv file
-  write_csv(metadata, file = paste0("/home/docker/Out/", opt$metadata))
-
-
   #### Make fasta file ####
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
@@ -374,13 +406,36 @@ if (platform == "Swift_FHI"){
   fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
     select(covv_virus_name, seq.text) %>%
     rename(`seq.name` = covv_virus_name)
-
+  
+  #### Run Frameshift analysis ####
+  # write temporary fasta file to Frameshift folder
+  # NB - the Frameshift folder can't have any fasta files in there from before
+  dat2fasta(fastas, outfile = "Frameshift/tmp.fasta")
+  
+  # Run the frameshift script
+  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
+  
+  # Remove any samples with bad FS
+  fastas <- Drop_FS_from_fasta(fastas)
+  
+  # Drop the same samples from the metadata file
+  metadata <- Drop_FS_from_metadata(metadata)
+  
+  # Clean up
+  system("rm Frameshift/tmp.fasta")
+  system("mv Frameshift/*.xlsx .")
+  system("mv Frameshift/*.csv .")
+  
+  #### Write files ####
+  # Write metadata file
+  write_csv(metadata, file = paste0("/home/docker/Out/", opt$metadata))
   # Lagre fastafilen
-  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
+  dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename))
+  
 } else if (platform == "Swift_MIK") {
   print ("Platform is Swift MIK")
   # Swift MIK/OUS------------------------------------------------------------
-  #### Trekke ut sekvenser ####
+  #### Trekke ut prøver ####
 
 
   # Trekk ut relevant oppsett og filtrer
@@ -547,12 +602,12 @@ if (platform == "Swift_FHI"){
            seq.text)
 
   # Lagre fastafilen
-  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
+  dat2fasta(fastas, outfile = fasta_filename)
 } else if (platform == "Artic_Illumina") {
   print ("Platform is Artic Illumina")
   # Artic Illumina ----------------------------------------------------------
 
-  ##### Trekke ut sekvenser ####
+  ##### Trekke ut prøver ####
 
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
@@ -723,12 +778,12 @@ if (platform == "Swift_FHI"){
            seq.text)
 
   # Lagre fastafilen
-  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
+  dat2fasta(fastas, outfile = fasta_filename)
 } else if (platform == "Artic_Nanopore") {
   print ("Platform is Artic Nanopore")
   # Artic Nanopore ----------------------------------------------------------
 
-  ##### Trekke ut sekvenser ####
+  ##### Trekke ut prøver ####
 
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
@@ -839,7 +894,7 @@ if (platform == "Swift_FHI"){
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
+  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", 
                         recursive = FALSE)
   # Pick our the relevant oppsett
   oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
@@ -878,8 +933,7 @@ if (platform == "Swift_FHI"){
   fastas <- fastas %>%
     # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
     mutate(tmp = gsub("_.*", "", seq.name)) %>%
-    # NB: Removing last digit from number in file name
-    mutate(KEY = str_sub(tmp, start = 1, end = -2))
+    mutate(KEY = str_sub(tmp, start = 1, end = -1))
 
   # Sett Virus name som fasta header
   # Først lage en mapping mellom KEY og virus name
@@ -903,5 +957,5 @@ if (platform == "Swift_FHI"){
            seq.text)
 
   # Lagre fastafilen
-  suppressMessages(dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename)))
+  dat2fasta(fastas, outfile = fasta_filename)
 }
