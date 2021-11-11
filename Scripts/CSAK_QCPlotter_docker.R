@@ -46,7 +46,9 @@ summaries<-read.csv(summaries, sep = "\t")
 #Noise into summaries 20102021
 colnames(noise.summ)[which(colnames(noise.summ)=="Sample")]<-"name"
 noise.summ<-merge(summaries, noise.summ[,c(1,11,12)], all.x = TRUE, by="name")
-write.csv(noise.summ, gsub(".csv","_Noise.csv",summaries.file))
+#write.csv(noise.summ, gsub(".csv","_Noise.csv",summaries.file), row.names = FALSE)
+write.table(noise.summ, gsub(".csv","_Noise.csv",summaries.file), sep = ",", quote = FALSE, row.names = FALSE)
+
 #-
 
 total<- merge(summaries, Plate, all=TRUE, by="name")
