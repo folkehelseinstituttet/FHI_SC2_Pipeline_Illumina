@@ -332,7 +332,8 @@ find . -type f -name "parameters" -exec rm -f {} \; # sletter de midlertidige fi
 rm *summary.csv
 
 cd "${basedir}/${runname}_summaries/fasta"
-cat *.fa  > ${basedir}/${runname}_summaries/${runname}.fa #Fasta file copy to main folder
+cat *.fa  > ${runname}.fa 
+cp ${runname}.fa ${basedir}/${runname}_summaries/${runname}.fa #Fasta file copy to main folder
 
 cd "${basedir}"
 
