@@ -365,7 +365,7 @@ if (platform == "Swift_FHI"){
   samples <- str_sub(gsub("SWIFT", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -1)
 
   # Find which filepaths to keep
-  keep <- vector("character", length = )
+  keep <- vector("character", length = length(oppsett_details$KEY))
   for (i in seq_along(oppsett_details$KEY)){
     keep[i] <- filepaths[grep(oppsett_details$KEY[i], filepaths)]
   }
