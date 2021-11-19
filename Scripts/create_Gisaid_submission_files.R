@@ -3,6 +3,7 @@
 # Load packages
 pacman::p_load(optparse, phylotools, tidyverse, readxl, stringr)
 
+# Parse options -----------------------------------------------------------
 option_list <- list(
   make_option(c("-p", "--platform"), type="character", default=NULL,
               help="Type platform. Må være enten: Swift_FHI, Swift_MIK, Artic_Illumina, Artic_Nanopore", metavar="character"),
@@ -26,16 +27,17 @@ if (is.null(opt$platform)){
   stop("At least one argument must be supplied", call.=FALSE)
 }
 
-# Trekke ut KEYs fra BN ---------------------------------------------------
-
+# Read data from BioNumerics ----------------------------------------------
 # Les inn BN spørring. Husk å Refreshe og lagre den originale excel-fila først (N:/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx)
-BN <- suppressWarnings(read_excel("/home/docker/Fastq/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
+BN <- suppressWarnings(read_excel("/home/docker/N/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
   select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7,
          SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE,
          SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT) %>%
   rename("Dekning_Artic" = PROSENTDEKNING_GENOM,
          "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
          "Dekning_Nano" = DEKNING_NANOPORE))
+
+# BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>% select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7, SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE, SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT) %>% rename("Dekning_Artic" = PROSENTDEKNING_GENOM, "Dekning_Swift" = COVERAGE_BREADTH_SWIFT, "Dekning_Nano" = DEKNING_NANOPORE)
 
 # Set parameters ----------------------------------------------------------
 
@@ -195,52 +197,50 @@ lookup_function <- function(metadata) {
 }
 
 
-# Define drop FS from fasta function --------------------------------------
-# Remove any samples with bad FS
-Drop_FS_from_fasta <- function(fastas) {
+# Define Frameshift function ----------------------------------------------
+FS <- function(fastas, metadata){
+  #### Run Frameshift analysis ####
+  # write temporary fasta file to Frameshift folder
+  suppressMessages(try(setwd("/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift")))
+  suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
+  # dat2fasta(fastas, outfile = "/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift/tmp.fasta")
   
-  FS_file <- list.files(path = "Frameshift/",
-             pattern = "*.xlsx",
-             full.names = T)
-
-  FS <- read_excel(FS_file)
-
-  # Define samples to keep (i.e. with OK FS)
-  FS_OK <- FS %>% 
-    filter(Ready == "YES") %>% 
+  dat2fasta(fastas, outfile = "tmp.fasta")
+  
+  # Run the frameshift script
+  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
+  # system("docker run --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
+  
+  #### Remove any samples with bad FS ####
+  FS_OK <- read_excel("FrameShift_tmp.xlsx") %>% 
+    filter(Ready == "YES") %>%
     rename(`seq.name` = "Sample")
   
   # Rename navn til å matche navn i fastas
   # Join fastas with FS to keep
-  fastas <- left_join(FS_OK, fastas, by = "seq.name") %>% 
+  fastas <- left_join(FS_OK, fastas, by = "seq.name") %>%
     select(`seq.name`, `seq.text`)
   
-  return(fastas)
-}
-
-# Define drop FS from metadata function -----------------------------------
-# Drop the same samples from the metadata file
-Drop_FS_from_metadata <- function(metadata) {
   
-  FS_file <- list.files(path = "Frameshift/",
-                        pattern = "*.xlsx",
-                        full.names = T)
-  
-  FS <- read_excel(FS_file)
-  
+  #### Drop the same samples from the metadata file #####
   # Define samples to keep (i.e. with OK FS)
-  FS_OK <- FS %>% 
-    filter(Ready == "YES") %>% 
-    rename("covv_virus_name" = "Sample")
+  FS_OK <- FS_OK %>%
+    rename("covv_virus_name" = `seq.name`)
   
-  # Rename navn til å matche navn i fastas
-  # Join fastas with FS to keep
-  metadata <- left_join(FS_OK, metadata, by = "covv_virus_name") %>% 
+  metadata <- left_join(FS_OK, metadata, by = "covv_virus_name") %>%
     select(-Deletions, -Frameshift, -Insertions, -Ready, -Comments)
   
-  return(metadata)
-}
+  # Clean up and write files
+  suppressMessages(try(setwd("/home/jonr/FHI_SC2_Pipeline_Illumina/")))
+  suppressMessages(try(setwd("/home/docker/Fastq/")))
+  file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
+  file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett, ".xlsx"))
+  write_csv(metadata, file = opt$metadata)
+  # Lagre fastafilen
+  # dat2fasta(fastas, outfile = fasta_filename)
+  dat2fasta(fastas, outfile = fasta_filename)
 
+}
 
 # Start script ------------------------------------------------------------
 
@@ -260,7 +260,7 @@ if (platform == "Swift_FHI"){
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN))
 
-  
+
   #### Lage metadata ####
 
   # Add platform-specific columns.
@@ -349,7 +349,9 @@ if (platform == "Swift_FHI"){
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/",
+  # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE)
+
+  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/",
                         recursive = FALSE)
   # Pick our the relevant oppsett
   dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
@@ -363,7 +365,7 @@ if (platform == "Swift_FHI"){
   samples <- str_sub(gsub("SWIFT", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -1)
 
   # Find which filepaths to keep
-  keep <- vector()
+  keep <- vector("character", length = length(oppsett_details$KEY))
   for (i in seq_along(oppsett_details$KEY)){
     keep[i] <- filepaths[grep(oppsett_details$KEY[i], filepaths)]
   }
@@ -406,32 +408,11 @@ if (platform == "Swift_FHI"){
   fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
     select(covv_virus_name, seq.text) %>%
     rename(`seq.name` = covv_virus_name)
+
+  #### Run Frameshift analysis and write final files ####
+  FS(fastas, metadata)
   
-  #### Run Frameshift analysis ####
-  # write temporary fasta file to Frameshift folder
-  # NB - the Frameshift folder can't have any fasta files in there from before
-  dat2fasta(fastas, outfile = "Frameshift/tmp.fasta")
-  
-  # Run the frameshift script
-  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
-  
-  # Remove any samples with bad FS
-  fastas <- Drop_FS_from_fasta(fastas)
-  
-  # Drop the same samples from the metadata file
-  metadata <- Drop_FS_from_metadata(metadata)
-  
-  # Clean up
-  system("rm Frameshift/tmp.fasta")
-  system("mv Frameshift/*.xlsx .")
-  system("mv Frameshift/*.csv .")
-  
-  #### Write files ####
-  # Write metadata file
-  write_csv(metadata, file = paste0("/home/docker/Out/", opt$metadata))
-  # Lagre fastafilen
-  dat2fasta(fastas, outfile = paste0("/home/docker/Out/", fasta_filename))
-  
+
 } else if (platform == "Swift_MIK") {
   print ("Platform is Swift MIK")
   # Swift MIK/OUS------------------------------------------------------------
@@ -449,14 +430,6 @@ if (platform == "Swift_FHI"){
     filter(!is.na(FYLKENAVN)) %>%
     # Remove "OUS-" from Sequence ID
     mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-"))
-
-  # Fjerne keys pga frameshift
-  suppressWarnings(
-    if (drop != "none"){
-      oppsett_details <- oppsett_details[!(oppsett_details$KEY %in% drop),]
-    }
-  )
-
 
   #### Lage metadata ####
 
@@ -537,9 +510,6 @@ if (platform == "Swift_FHI"){
            "covv_treatment",
            "covv_coverage"= COVERAGE_DEPTH_SWIFT)
 
-  # Write csv file
-  write_csv(metadata, file = opt$metadata)
-
   #### Make fasta file ####
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
@@ -601,8 +571,9 @@ if (platform == "Swift_FHI"){
     select(`seq.name` = covv_virus_name,
            seq.text)
 
-  # Lagre fastafilen
-  dat2fasta(fastas, outfile = fasta_filename)
+  #### Run Frameshift analysis and write final files ####
+  FS(fastas, metadata)
+  
 } else if (platform == "Artic_Illumina") {
   print ("Platform is Artic Illumina")
   # Artic Illumina ----------------------------------------------------------
@@ -619,20 +590,12 @@ if (platform == "Swift_FHI"){
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN))
 
-  # Fjerne keys pga frameshift
-  suppressWarnings(
-    if (drop != "none"){
-      oppsett_details <- oppsett_details[!(oppsett_details$KEY %in% drop),]
-    }
-  )
-
-
   #### Lage metadata ####
 
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
-  seq_tech <- "Illumina Swift Amplicon SARS-CoV-2 protocol at Norwegian Sequencing Centre"
-  ass_method <- "Assembly by reference based mapping using Bowtie2 with iVar majority rules consensus"
+  seq_tech <- "Illumina MiSeq, modified ARTIC protocol with V4 primers"
+  ass_method <- "Assembly by reference based mapping using Tanoti with iVar majority rules consensus"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
   authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
@@ -711,15 +674,13 @@ if (platform == "Swift_FHI"){
   # Remove column INNSENDER
   metadata <- metadata %>% select(-INNSENDER)
 
-  # Write csv file
-  write_csv(metadata, file = opt$metadata)
-
   #### Make fasta file ####
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
   dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021",
                         recursive = FALSE)
+  # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE)
   # Pick our the relevant oppsett
   dir <- dirs_fhi[grep(paste0(oppsett, "_Corona"), dirs_fhi)]
 
@@ -776,9 +737,10 @@ if (platform == "Swift_FHI"){
   fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
     select(`seq.name` = covv_virus_name,
            seq.text)
-
-  # Lagre fastafilen
-  dat2fasta(fastas, outfile = fasta_filename)
+  
+  #### Run Frameshift analysis and write final files ####
+  FS(fastas, metadata)
+  
 } else if (platform == "Artic_Nanopore") {
   print ("Platform is Artic Nanopore")
   # Artic Nanopore ----------------------------------------------------------
@@ -887,14 +849,11 @@ if (platform == "Swift_FHI"){
   # Remove column INNSENDER
   metadata <- metadata %>% select(-INNSENDER)
 
-  # Write csv file
-  write_csv(metadata, file = opt$metadata)
-
   #### Make fasta file ####
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", 
+  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
                         recursive = FALSE)
   # Pick our the relevant oppsett
   oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
@@ -955,7 +914,7 @@ if (platform == "Swift_FHI"){
   fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
     select(`seq.name` = covv_virus_name,
            seq.text)
-
-  # Lagre fastafilen
-  dat2fasta(fastas, outfile = fasta_filename)
+  
+  #### Run Frameshift analysis and write final files ####
+  FS(fastas, metadata)
 }

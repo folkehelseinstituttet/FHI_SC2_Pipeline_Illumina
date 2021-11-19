@@ -332,7 +332,8 @@ find . -type f -name "parameters" -exec rm -f {} \; # sletter de midlertidige fi
 rm *summary.csv
 
 cd "${basedir}/${runname}_summaries/fasta"
-cat *.fa  > ${basedir}/${runname}_summaries/${runname}.fa #Fasta file copy to main folder
+cat *.fa  > ${runname}.fa 
+cp ${runname}.fa ${basedir}/${runname}_summaries/${runname}.fa #Fasta file copy to main folder
 
 cd "${basedir}"
 
@@ -348,9 +349,11 @@ cd "${basedir}"
 ####### Index filer i IGV-mappen ##### SLUTT #####
 
 ####### Pangolin og Nextclade  ##### START #####
-
+source activate pangolin #Added 10Nov2021 for UShER
 pangolin --update
-pangolin ${basedir}/${runname}_summaries/fasta/${runname}.fa --outfile ${basedir}/${runname}_summaries/${runname}_pangolin_out.csv
+pangolin --usher ${basedir}/${runname}_summaries/fasta/${runname}.fa --outfile ${basedir}/${runname}_summaries/${runname}_pangolin_out.csv #Added 10Nov2021 for UShER
+
+conda deactivate #Added 10Nov2021 for UShER
 
 nextclade --input-fasta ${basedir}/${runname}_summaries/fasta/${runname}.fa --output-csv ${basedir}/${runname}_summaries/${runname}_Nextclade.results.csv
 nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --reference=/home/docker/CommonFiles/reference_nc.fasta \
