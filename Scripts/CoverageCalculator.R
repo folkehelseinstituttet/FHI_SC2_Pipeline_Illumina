@@ -5,6 +5,7 @@ library(progress)
 library(Biostrings)
 library("ggplot2")
 library("pdftools")
+library("ggpubr")
 
 #NoiseRunner2
 
@@ -97,6 +98,7 @@ for (i in 1:nrow(Amplicons)) {
 }
 
 out.agg<-aggregate(Reads~Amplicon, out, FUN=mean)
+
 out.agg.sd<-aggregate(Reads~Amplicon, out, FUN=sd)
 out.agg$SD<-out.agg.sd$Reads
 out.agg$Amplicon<-factor(out.agg$Amplicon, levels = 
@@ -129,6 +131,7 @@ ggplot(out.agg)+
   theme_minimal()+
   ylab("Raw Number of Reads (mean)")+
   ggtitle(paste("Depth", runname))
+
 ggsave(gsub("_NextcladeAndPangolin.csv","_Depth.pdf", runid), width = 12, height = 6)
 
 
@@ -139,15 +142,58 @@ out$SampleLineage<-paste(out$Sample, out$lineage, sep = " / ")
 out$Amplicon<-factor(out$Amplicon, levels = 
                        unique(as.character(out$Amplicon))[order(as.numeric(gsub(".*_","",unique(as.character(out$Amplicon)))))])
 
-  ggplot(out)+
-  geom_bar(aes(Amplicon, Reads), fill="red", stat = "identity")+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-  ylab("Raw Number of Reads (mean)")+
-  facet_wrap(~SampleLineage)
 
-ggsave(gsub("_NextcladeAndPangolin.csv","_Amplicon_Sample.pdf", runid), width = 22, height = 16)
+out.agg2<- aggregate(Reads~Amplicon+SampleLineage, out, median)
+out.agg2.sd<- aggregate(Reads~Amplicon+SampleLineage, out, sd)
+out.agg2$SD<-out.agg2.sd$Reads 
+
+out.plots<-list()
+sample.uniq<-unique(out.agg2$SampleLineage)
+
+for (pl in 1:length(sample.uniq)) {
+  out.plots[[pl]]<-ggplot(out.agg2[which(out.agg2$SampleLineage==sample.uniq[pl]),])+
+    geom_bar(aes(Amplicon, Reads), fill="red", stat = "identity")+
+    geom_errorbar(aes(x=Amplicon, ymin= Reads, ymax=Reads+SD ))+
+    theme_minimal()+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 4))+
+    ylim(0, max(out.agg2$Reads+out.agg2$SD))+
+    ylab("Median Number of Reads")+
+    ggtitle(sample.uniq[pl])
+}
+
+if(length(out.plots)<=30 ){
+  if(length(out.plots)>0){
+    ggarrange(plotlist =  out.plots[1:length(out.plots)], ncol = 3, nrow = 10)
+    ggsave(gsub("_NextcladeAndPangolin.csv","_Amplicon_Sample.pdf", runid), width = 16, height = 22)
+  }  
+}else{
+  plotting<-TRUE
+  start<-1
+  end<-30
+  counter<-0
   
+  while(plotting){
+    if(end==length(out.plots)) plotting<-FALSE
+    ggarrange(plotlist =  out.plots[start:end], ncol = 3, nrow = 10)
+    start<-end+1
+    end<-end+40
+    if(end>=length(out.plots)) end<-length(out.plots)
+    counter<-counter+1
+    ggsave(gsub("_NextcladeAndPangolin.csv", paste("_Amplicon_Sample",counter,".pdf",sep = ""), runid), width = 16, height = 22)
+
+    
+  }
+}
+
+library("pdftools")
+
+pdf.list<-list.files(results, full.names = TRUE, pattern = "_Amplicon_Sample.*\\.pdf")
+if(length(pdf.list)>1){
+  pdf_combine(pdf.list, output = gsub("_.\\.pdf","_Merged.pdf",pdf.list[1]))
+  file.remove(pdf.list)}
+  
+
+
  ggplot(out)+
    geom_line(aes(Base, Reads), colour="red")+
    theme_minimal()+
