@@ -260,7 +260,7 @@ do
     wee1114=$(echo "scale=5;(($RefLength-$LengthBelowDepth1)/$RefLength)*100" |bc) 
     PercCovAboveDepth9=$(echo "scale=5;(($RefLength-$LengthBelowDepth10)/$RefLength)*100" |bc)    
     PercCovAboveDepth29=$(echo "scale=5;(($RefLength-$LengthBelowDepth30)/$RefLength)*100" |bc)
-  
+  #test
 #write bit
 echo "Parameters, ${dir%/}" >> ${dir%/}_summary.csv
 echo "Total_number_of_reads_before_mapping_and_trim:, ${readsb42}"  >> ${dir%/}_summary.csv
