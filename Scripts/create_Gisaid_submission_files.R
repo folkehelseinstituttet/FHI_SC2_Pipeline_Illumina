@@ -757,14 +757,6 @@ if (platform == "Swift_FHI"){
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN))
 
-  # Fjerne keys pga frameshift
-  suppressWarnings(
-    if (drop != "none"){
-      oppsett_details <- oppsett_details[!(oppsett_details$KEY %in% drop),]
-    }
-  )
-
-
   #### Lage metadata ####
 
   # Add platform-specific columns.
@@ -853,6 +845,7 @@ if (platform == "Swift_FHI"){
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
+  # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE)
   dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
                         recursive = FALSE)
   # Pick our the relevant oppsett
@@ -892,7 +885,7 @@ if (platform == "Swift_FHI"){
   fastas <- fastas %>%
     # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
     mutate(tmp = gsub("_.*", "", seq.name)) %>%
-    mutate(KEY = str_sub(tmp, start = 1, end = -1))
+    mutate(KEY = str_sub(tmp, start = 1, end = -2))
 
   # Sett Virus name som fasta header
   # Først lage en mapping mellom KEY og virus name
