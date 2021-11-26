@@ -201,7 +201,7 @@ lookup_function <- function(metadata) {
 FS <- function(fastas, metadata){
   #### Run Frameshift analysis ####
   # write temporary fasta file to Frameshift folder
-  suppressMessages(try(setwd("/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift")))
+  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
   suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # dat2fasta(fastas, outfile = "/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift/tmp.fasta")
   
@@ -231,7 +231,7 @@ FS <- function(fastas, metadata){
     select(-Deletions, -Frameshift, -Insertions, -Ready, -Comments)
   
   # Clean up and write files
-  suppressMessages(try(setwd("/home/jonr/FHI_SC2_Pipeline_Illumina/")))
+  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
   suppressMessages(try(setwd("/home/docker/Fastq/")))
   file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
   file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett, ".xlsx"))
