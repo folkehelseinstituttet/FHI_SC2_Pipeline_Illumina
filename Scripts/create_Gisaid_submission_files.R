@@ -201,7 +201,7 @@ lookup_function <- function(metadata) {
 FS <- function(fastas, metadata){
   #### Run Frameshift analysis ####
   # write temporary fasta file to Frameshift folder
-  suppressMessages(try(setwd("/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift")))
+  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
   suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # dat2fasta(fastas, outfile = "/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift/tmp.fasta")
   
@@ -221,7 +221,6 @@ FS <- function(fastas, metadata){
   fastas <- left_join(FS_OK, fastas, by = "seq.name") %>%
     select(`seq.name`, `seq.text`)
   
-  
   #### Drop the same samples from the metadata file #####
   # Define samples to keep (i.e. with OK FS)
   FS_OK <- FS_OK %>%
@@ -231,7 +230,7 @@ FS <- function(fastas, metadata){
     select(-Deletions, -Frameshift, -Insertions, -Ready, -Comments)
   
   # Clean up and write files
-  suppressMessages(try(setwd("/home/jonr/FHI_SC2_Pipeline_Illumina/")))
+  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
   suppressMessages(try(setwd("/home/docker/Fastq/")))
   file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
   file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett, ".xlsx"))
@@ -514,7 +513,7 @@ if (platform == "Swift_FHI"){
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK",
+  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK",
                         recursive = FALSE)
   # Pick our the relevant oppsett
   dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
@@ -678,11 +677,11 @@ if (platform == "Swift_FHI"){
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021",
+  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021",
                         recursive = FALSE)
   # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE)
   # Pick our the relevant oppsett
-  dir <- dirs_fhi[grep(paste0(oppsett, "_Corona"), dirs_fhi)]
+  dir <- dirs_fhi[grep(oppsett, dirs_fhi)]
 
   # List the files
   filepaths <- list.files(path = dir,
@@ -756,14 +755,6 @@ if (platform == "Swift_FHI"){
     filter(Dekning_Nano >=97) %>%
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN))
-
-  # Fjerne keys pga frameshift
-  suppressWarnings(
-    if (drop != "none"){
-      oppsett_details <- oppsett_details[!(oppsett_details$KEY %in% drop),]
-    }
-  )
-
 
   #### Lage metadata ####
 
@@ -853,7 +844,8 @@ if (platform == "Swift_FHI"){
 
   # Search the N: disk for consensus sequences. This could take a few minutes.
   # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/Fastq/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
+  # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE)
+  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
                         recursive = FALSE)
   # Pick our the relevant oppsett
   oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
@@ -866,8 +858,6 @@ if (platform == "Swift_FHI"){
                           pattern = "consensus\\.fasta$",
                           full.names = TRUE,
                           recursive = TRUE)
-
-  samples <- str_sub(gsub("_.*","", gsub(".*/","", filepaths)), start = 1, end = -1)
 
   # Find which filepaths to keep
   keep <- vector()
@@ -892,7 +882,7 @@ if (platform == "Swift_FHI"){
   fastas <- fastas %>%
     # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
     mutate(tmp = gsub("_.*", "", seq.name)) %>%
-    mutate(KEY = str_sub(tmp, start = 1, end = -1))
+    mutate(KEY = str_sub(tmp, start = 1, end = -2))
 
   # Sett Virus name som fasta header
   # Først lage en mapping mellom KEY og virus name

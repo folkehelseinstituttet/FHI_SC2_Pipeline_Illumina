@@ -29,5 +29,3 @@ docker run -it --rm \
   -v $(pwd):/home/docker/Fastq \
   garcianacho/fhisc2:Illumina \
   Rscript --vanilla /home/docker/Scripts/create_Gisaid_submission_files.R -p $platform -o $oppsett -f $fasta -m $metadata -S $submitter
-
-# Her kan jeg fortsette i bash og flytte på filer til N?, og kanskje ta gisaid-submission?
