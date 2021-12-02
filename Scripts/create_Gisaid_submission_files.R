@@ -558,7 +558,8 @@ if (platform == "Swift_FHI"){
     filter(!is.na(FYLKENAVN)) %>% 
     # Create column for looping through later
     mutate(SEARCH_COLUMN = KEY) %>% 
-    rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
+    rename("COVERAGE" = COVERAGE_DEPTH_SWIFT) %>% 
+    mutate("PROVE_TATT" = ymd(PROVE_TATT))
 
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
@@ -599,7 +600,8 @@ if (platform == "Swift_FHI"){
     mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>% 
     # Create column for looping through later
     mutate(SEARCH_COLUMN = SEQUENCE_ID_TRIMMED) %>% 
-    rename("COVERGE" = COVERAGE_DEPTH_SWIFT)
+    rename("COVERGE" = COVERAGE_DEPTH_SWIFT) %>% 
+    mutate("PROVE_TATT" = ymd(PROVE_TATT))
 
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
@@ -641,7 +643,8 @@ if (platform == "Swift_FHI"){
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN)) %>% 
     mutate(SEARCH_COLUMN = KEY) %>% 
-    rename("COVERAGE" = RES_CDC_INFA_RX)
+    rename("COVERAGE" = RES_CDC_INFA_RX) %>% 
+    mutate("PROVE_TATT" = ymd(PROVE_TATT))
 
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
@@ -681,7 +684,8 @@ if (platform == "Swift_FHI"){
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN)) %>% 
     mutate(SEARCH_COLUMN = KEY) %>% 
-    rename("COVERAGE" = COVARAGE_DEPTH_NANO)
+    rename("COVERAGE" = COVARAGE_DEPTH_NANO) %>% 
+    mutate("PROVE_TATT" = ymd(PROVE_TATT))
   
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
