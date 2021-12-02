@@ -32,12 +32,12 @@ if (is.null(opt$platform)){
 BN <- suppressWarnings(read_excel("/home/docker/N/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
   select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7,
          SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE,
-         SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT) %>%
+         SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>%
   rename("Dekning_Artic" = PROSENTDEKNING_GENOM,
          "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
          "Dekning_Nano" = DEKNING_NANOPORE))
 
-# BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>% select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7, SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE, SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT) %>% rename("Dekning_Artic" = PROSENTDEKNING_GENOM, "Dekning_Swift" = COVERAGE_BREADTH_SWIFT, "Dekning_Nano" = DEKNING_NANOPORE)
+# BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>% select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7, SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE, SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>% rename("Dekning_Artic" = PROSENTDEKNING_GENOM, "Dekning_Swift" = COVERAGE_BREADTH_SWIFT, "Dekning_Nano" = DEKNING_NANOPORE)
 
 # Set parameters ----------------------------------------------------------
 
@@ -197,8 +197,290 @@ lookup_function <- function(metadata) {
 }
 
 
+
+
+# Find sequences on N: and create fasta object ----------------------------
+find_sequences <- function(platform, oppsett) {
+  if (platform == "Swift_FHI"){
+    # Search the N: disk for consensus sequences
+    # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE)
+    dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/",
+                          recursive = FALSE)
+    
+    # Pick our the relevant oppsett
+    dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
+    
+    # List the files
+    filepaths <- list.files(path = dir,
+                            pattern = "ivar\\.consensus\\.masked_Nremoved\\.fa$",
+                            full.names = TRUE,
+                            recursive = TRUE)
+    samples <- str_sub(gsub("SWIFT", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -1)
+    
+  } else if (platform == "Swift_MIK") {
+    # Search the N: disk for consensus sequences. 
+    # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE)
+    dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK",
+                          recursive = FALSE)
+    # Pick our the relevant oppsett
+    dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
+    
+    # List the files
+    filepaths <- list.files(path = dir,
+                            pattern = "ivar\\.consensus\\.masked_Nremoved\\.fa$",
+                            full.names = TRUE,
+                            recursive = TRUE)
+    
+    samples <- gsub("_.*","", gsub(".*/","", filepaths))
+  } else if (platform == "Artic_Illumina") {
+    # Search the N: disk for consensus sequences. 
+    try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", 
+                              recursive = FALSE))
+    try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021",
+                          recursive = FALSE))
+    # Pick our the relevant oppsett
+    dir <- dirs_fhi[grep(oppsett, dirs_fhi)]
+    
+    # List the files
+    filepaths <- list.files(path = dir,
+                            pattern = "consensus\\.fa$",
+                            full.names = TRUE,
+                            recursive = TRUE)
+    
+    # Dropper det siste tallet.
+    samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
+  } else if (platform == "Artic_Nanopore") {
+    # Search the N: disk for consensus sequences. 
+    #dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE))
+    dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
+                          recursive = FALSE)
+    # Pick our the relevant oppsett
+    oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
+    dir <- dirs_fhi[grep(paste0(oppsett), dirs_fhi)]
+    #NB! Denne må automatiseres - hvordan? EN if statement om hvis RAPID så... eller temp... eller copy
+    #dir <- dir[-grep("RAPID", dir)]
+    
+    # List the files
+    filepaths <- list.files(path = dir,
+                            pattern = "consensus\\.fasta$",
+                            full.names = TRUE,
+                            recursive = TRUE)
+  }
+
+  # Find which filepaths to keep
+  keep <- vector("character", length = length(oppsett_details$SEARCH_COLUMN))
+  for (i in seq_along(oppsett_details$SEARCH_COLUMN)){
+    keep[i] <- filepaths[grep(oppsett_details$SEARCH_COLUMN[i], filepaths)]
+  }
+  
+  # Read each fasta file and combine them to create one file
+  # First create empty data frame to fill
+  fastas <- data.frame(seq.name = character(),
+                       seq.text = character())
+  
+  for (f in seq_along(keep)){
+    tmp <- read.fasta(keep[f])      # read the file
+    fastas <- rbind(fastas, tmp)    # append the current file
+  }
+  
+  # Convert to tibble for easier manipulation
+  fastas <- as_tibble(fastas)
+  
+  # Fix names to match KEY
+  if (platform == "Swift_FHI") {
+    fastas <- fastas %>%
+      mutate(tmp = str_remove(seq.name, "_ivar_masked")) %>%
+      mutate(KEY = str_remove(tmp, "SWIFT"))
+  } else if (platform == "Swift_MIK") {
+    # Fix names to match SEQUENCEID_SWIFT
+    fastas <- fastas %>%
+      mutate(SEQUENCE_ID_TRIMMED = str_remove(seq.name, "_ivar_masked"))
+  } else if (platform == "Artic_Illumina") {
+    # Fix names to match KEY
+    fastas <- fastas %>%
+      mutate(tmp = str_remove(seq.name, "Artic")) %>%
+      mutate(KEY = str_sub(tmp, start = 1, end = -2))
+  } else if (platform == "Artic_Nanopore") {
+    # Fix names to match KEY
+    fastas <- fastas %>%
+      # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
+      mutate(tmp = gsub("_.*", "", seq.name)) %>%
+      mutate(KEY = str_sub(tmp, start = 1, end = -2))
+  }
+  
+  # Sett Virus name som fasta header
+  # Først lage en mapping mellom KEY og virus name
+  if (platform == "Swift_FHI") {
+    KEY_virus_mapping <- oppsett_details %>%
+      # Lage kolonne for "year"
+      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+      add_column("Separator" = "/",
+                 "GISAID_prefix" = "hCoV-19/",
+                 "Country" = "Norway/",
+                 "Continent" = "Europe/") %>%
+      # Make "Virus name" column
+      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+      select(KEY, covv_virus_name)
+    
+    
+    fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
+      select(covv_virus_name, seq.text) %>%
+      rename(`seq.name` = covv_virus_name)
+  } else if (platform == "Swift_MIK") {
+    KEY_virus_mapping <- oppsett_details %>%
+      # Lage kolonne for "year"
+      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+      mutate("Uniq_nr" = str_sub(KEY, start = 1, end = -1)) %>%
+      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+      add_column("Separator" = "/",
+                 "GISAID_prefix" = "hCoV-19/",
+                 "Country" = "Norway/",
+                 "Continent" = "Europe/") %>%
+      # Make "Virus name" column
+      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+      select(SEQUENCEID_SWIFT, KEY, covv_virus_name, SEQUENCE_ID_TRIMMED)
+    
+    
+    fastas <- left_join(fastas, KEY_virus_mapping, by = "SEQUENCE_ID_TRIMMED") %>%
+      select(`seq.name` = covv_virus_name,
+             seq.text)
+  } else if (platform == "Artic_Illumina") {
+    KEY_virus_mapping <- oppsett_details %>%
+      # Lage kolonne for "year"
+      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+      add_column("Separator" = "/",
+                 "GISAID_prefix" = "hCoV-19/",
+                 "Country" = "Norway/",
+                 "Continent" = "Europe/") %>%
+      # Make "Virus name" column
+      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+      select(KEY, covv_virus_name)
+    
+    
+    fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
+      select(`seq.name` = covv_virus_name,
+             seq.text)
+
+  } else if (platform == "Artic_Nanopore") {
+    KEY_virus_mapping <- oppsett_details %>%
+      # Lage kolonne for "year"
+      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+      add_column("Separator" = "/",
+                 "GISAID_prefix" = "hCoV-19/",
+                 "Country" = "Norway/",
+                 "Continent" = "Europe/") %>%
+      # Make "Virus name" column
+      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+      select(KEY, covv_virus_name)
+    
+    fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
+      select(`seq.name` = covv_virus_name,
+             seq.text)
+  }
+  return(fastas)
+}
+
+
+# Define metadata function ------------------------------------------------
+create_metadata <- function(oppsett_details) {
+  
+  metadata <- oppsett_details %>%
+    # Lage kolonne for "year"
+    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE)
+  
+  if (platform == "Swift_MIK") {
+    metadata <- metadata %>% 
+      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+      mutate("Uniq_nr" = str_sub(KEY, start = 1, end = -1))
+  } else {
+    metadata <- metadata %>% 
+      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1))
+  }
+  metadata <- metadata %>% 
+    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+    add_column("Separator" = "/",
+               "GISAID_prefix" = "hCoV-19/",
+               "Country" = "Norway/",
+               "Continent" = "Europe/") %>%
+  # Make "Virus name" column
+  unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+  # Lage Location-kolonne
+  unite("covv_location", c(Continent, Country, FYLKENAVN), sep = "", remove = FALSE) %>%
+  # Legge til faste kolonner
+  add_column("submitter" = submitter,
+             "fn" = fasta_filename,
+             "covv_type" = type,
+             "covv_passage" = passage,
+             "covv_host" = host,
+             "covv_gender" = gender,
+             "covv_patient_age" = age,
+             "covv_patient_status" = status,
+             "covv_specimen" = specimen,
+             "covv_seq_technology" = seq_tech,
+             "covv_assembly_method" = ass_method,
+             "covv_orig_lab" = orig_lab,
+             "covv_orig_lab_addr" = orig_adr,
+             "covv_subm_lab" = sub_lab,
+             "covv_subm_lab_addr" = address,
+             "covv_authors" = authors,
+             "covv_subm_sample_id" = covv_subm_sample_id,
+             "covv_outbreak" = covv_outbreak,
+             "covv_add_host_info" = covv_add_host_info,
+             "covv_add_location" = covv_add_location,
+             "covv_provider_sample_id" = covv_provider_sample_id,
+             "covv_last_vaccinated" = covv_last_vaccinated,
+             "covv_treatment" = covv_treatment) %>% 
+    # Beholde endelige kolonner og rekkefølge
+    select("submitter",
+           "fn",
+           "covv_virus_name",
+           "covv_type",
+           "covv_passage",
+           "covv_collection_date" = PROVE_TATT,
+           "covv_location",
+           "covv_host",
+           "covv_gender",
+           "covv_patient_age",
+           "covv_patient_status",
+           "covv_specimen",
+           "covv_seq_technology",
+           "covv_assembly_method",
+           "covv_orig_lab",
+           "covv_orig_lab_addr",
+           "covv_subm_lab",
+           "covv_subm_lab_addr",
+           "covv_authors",
+           "covv_subm_sample_id",
+           "covv_outbreak",
+           "covv_add_host_info",
+           "covv_add_location",
+           "covv_provider_sample_id",
+           "covv_last_vaccinated",
+           "covv_treatment",
+           "covv_coverage" = COVERAGE,
+           "INNSENDER")
+
+  # Legge inn orig lab og adresse
+  metadata <- lookup_function(metadata)
+
+  # Remove column INNSENDER
+  metadata <- metadata %>% select(-INNSENDER)
+  
+  return(metadata)
+}
 # Define Frameshift function ----------------------------------------------
-FS <- function(fastas, metadata){
+FS <- function(fastas){
   #### Run Frameshift analysis ####
   # write temporary fasta file to Frameshift folder
   suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
@@ -211,34 +493,50 @@ FS <- function(fastas, metadata){
   system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
   # system("docker run --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
   
+}
+
+# Remove bad FS from fasta ------------------------------------------------
+remove_FS_fasta <- function(fastas){
   #### Remove any samples with bad FS ####
+  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
+  suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   FS_OK <- read_excel("FrameShift_tmp.xlsx") %>% 
     filter(Ready == "YES") %>%
     rename(`seq.name` = "Sample")
   
   # Rename navn til å matche navn i fastas
   # Join fastas with FS to keep
-  fastas <- left_join(FS_OK, fastas, by = "seq.name") %>%
+  fastas_clean <- left_join(FS_OK, fastas, by = "seq.name") %>%
     select(`seq.name`, `seq.text`)
-  
+  return(fastas_clean)
+}
+
+# Remove bad FS from metadata ---------------------------------------------
+remove_FS_metadata <- function(metadata){
   #### Drop the same samples from the metadata file #####
+  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
+  suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # Define samples to keep (i.e. with OK FS)
-  FS_OK <- FS_OK %>%
-    rename("covv_virus_name" = `seq.name`)
+  FS_OK <- read_excel("FrameShift_tmp.xlsx") %>% 
+    filter(Ready == "YES") %>%
+    rename("covv_virus_name" = "Sample")
   
-  metadata <- left_join(FS_OK, metadata, by = "covv_virus_name") %>%
+  metadata_clean <- left_join(FS_OK, metadata, by = "covv_virus_name") %>%
     select(-Deletions, -Frameshift, -Insertions, -Ready, -Comments)
-  
-  # Clean up and write files
+
+  return(metadata_clean)
+}
+
+
+# Define clean up and write function --------------------------------------
+clean_up_and_write <- function(fastas_clean, metadata_clean) {
+
   suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
   suppressMessages(try(setwd("/home/docker/Fastq/")))
   file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
   file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett, ".xlsx"))
-  write_csv(metadata, file = opt$metadata)
-  # Lagre fastafilen
-  # dat2fasta(fastas, outfile = fasta_filename)
-  dat2fasta(fastas, outfile = fasta_filename)
-
+  write_csv(metadata_clean, file = opt$metadata)
+  dat2fasta(fastas_clean, outfile = fasta_filename)
 }
 
 # Start script ------------------------------------------------------------
@@ -257,10 +555,10 @@ if (platform == "Swift_FHI"){
     # Filtrer på coverage >= 97%
     filter(Dekning_Swift >=97) %>%
     # Fjerne de som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN))
-
-
-  #### Lage metadata ####
+    filter(!is.na(FYLKENAVN)) %>% 
+    # Create column for looping through later
+    mutate(SEARCH_COLUMN = KEY) %>% 
+    rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
 
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
@@ -270,154 +568,24 @@ if (platform == "Swift_FHI"){
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
   authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
 
-  metadata <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    # Lage Location-kolonne
-    unite("covv_location", c(Continent, Country, FYLKENAVN), sep = "", remove = FALSE) %>%
-    # Legge til faste kolonner
-    add_column("submitter" = submitter,
-               "fn" = fasta_filename,
-               "covv_type" = type,
-               "covv_passage" = passage,
-               "covv_host" = host,
-               "covv_gender" = gender,
-               "covv_patient_age" = age,
-               "covv_patient_status" = status,
-               "covv_specimen" = specimen,
-               "covv_seq_technology" = seq_tech,
-               "covv_assembly_method" = ass_method,
-               "covv_orig_lab" = orig_lab,
-               "covv_orig_lab_addr" = orig_adr,
-               "covv_subm_lab" = sub_lab,
-               "covv_subm_lab_addr" = address,
-               "covv_authors" = authors,
-               "covv_subm_sample_id" = covv_subm_sample_id,
-               "covv_outbreak" = covv_outbreak,
-               "covv_add_host_info" = covv_add_host_info,
-               "covv_add_location" = covv_add_location,
-               "covv_provider_sample_id" = covv_provider_sample_id,
-               "covv_last_vaccinated" = covv_last_vaccinated,
-               "covv_treatment" = covv_treatment) %>%
-    # Beholde endelige kolonner og rekkefølge
-    select("submitter",
-           "fn",
-           "covv_virus_name",
-           "covv_type",
-           "covv_passage",
-           "covv_collection_date" = PROVE_TATT,
-           "covv_location",
-           "covv_host",
-           "covv_gender",
-           "covv_patient_age",
-           "covv_patient_status",
-           "covv_specimen",
-           "covv_seq_technology",
-           "covv_assembly_method",
-           "covv_orig_lab",
-           "covv_orig_lab_addr",
-           "covv_subm_lab",
-           "covv_subm_lab_addr",
-           "covv_authors",
-           "covv_subm_sample_id",
-           "covv_outbreak",
-           "covv_add_host_info",
-           "covv_add_location",
-           "covv_provider_sample_id",
-           "covv_last_vaccinated",
-           "covv_treatment",
-           "covv_coverage" = COVERAGE_DEPTH_SWIFT,
-           "INNSENDER")
-
-  # Legge inn orig lab og adresse
-  metadata <- lookup_function(metadata)
-
-  # Remove column INNSENDER
-  metadata <- metadata %>% select(-INNSENDER)
-
-  #### Make fasta file ####
-
-  # Search the N: disk for consensus sequences. This could take a few minutes.
-  # List relevant folders to search through
-  # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE)
-
-  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/",
-                        recursive = FALSE)
-  # Pick our the relevant oppsett
-  dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
-
-  # List the files
-  filepaths <- list.files(path = dir,
-                          pattern = "ivar\\.consensus\\.masked_Nremoved\\.fa$",
-                          full.names = TRUE,
-                          recursive = TRUE)
-
-  samples <- str_sub(gsub("SWIFT", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -1)
-
-  # Find which filepaths to keep
-  keep <- vector("character", length = length(oppsett_details$KEY))
-  for (i in seq_along(oppsett_details$KEY)){
-    keep[i] <- filepaths[grep(oppsett_details$KEY[i], filepaths)]
-  }
-
-  # Read each fasta file and combine them to create one file
-  # First create empty data frame to fill
-  fastas <- data.frame(seq.name = character(),
-                       seq.text = character())
-
-  for (f in seq_along(keep)){
-    tmp <- read.fasta(keep[f])      # read the file
-    fastas <- rbind(fastas, tmp)    # append the current file
-  }
-
-  # Convert to tibble for easier manipulation
-  fastas <- as_tibble(fastas)
-
-  # Fix names to match KEY
-  fastas <- fastas %>%
-    mutate(tmp = str_remove(seq.name, "_ivar_masked")) %>%
-    mutate(KEY = str_remove(tmp, "SWIFT"))
-
-  # Sett Virus name som fasta header
-  # Først lage en mapping mellom KEY og virus name
-  KEY_virus_mapping <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    select(KEY, covv_virus_name)
-
-
-  fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
-    select(covv_virus_name, seq.text) %>%
-    rename(`seq.name` = covv_virus_name)
-
-  #### Run Frameshift analysis and write final files ####
-  FS(fastas, metadata)
+  #### Lage metadata ####
+  metadata <- create_metadata(oppsett_details)
   
+  #### Find sequences on N: ####
+  fastas <- find_sequences(platform, oppsett)
+  
+  #### Run Frameshift analysis ####
+  FS(fastas)
+  fastas_clean <- remove_FS_fasta(fastas)
+  metadata_clean <- remove_FS_metadata(metadata)
+  
+  #### Clean up and write files
+  clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
 
 } else if (platform == "Swift_MIK") {
   print ("Platform is Swift MIK")
   # Swift MIK/OUS------------------------------------------------------------
   #### Trekke ut prøver ####
-
-
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
     filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>%
@@ -428,9 +596,10 @@ if (platform == "Swift_FHI"){
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN)) %>%
     # Remove "OUS-" from Sequence ID
-    mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-"))
-
-  #### Lage metadata ####
+    mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>% 
+    # Create column for looping through later
+    mutate(SEARCH_COLUMN = SEQUENCE_ID_TRIMMED) %>% 
+    rename("COVERGE" = COVERAGE_DEPTH_SWIFT)
 
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
@@ -441,137 +610,20 @@ if (platform == "Swift_FHI"){
   authors <- "Mona Holberg-Petersen, Lise Andresen, Cathrine Fladeby, Mariann Nilsen, Teodora Plamenova Ribarska, Pål Marius Bjørnstad, Gregor D. Gilfillan, Arvind Yegambaram Meenakshi Sundaram,Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Pedersen Benedikte Nevjen, Line Victoria Moen, Rasmus Riis Kopperud, Hilde Vollan, Olav Hungnes, Karoline Bragstad"
   orig_lab <- "Oslo University Hospital, Department of Microbiology"
   orig_adr <- "P.O.Box 4956 Nydalen, N-0424 Oslo, Norway"
-
-  metadata <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 1, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    # Lage Location-kolonne
-    unite("covv_location", c(Continent, Country, FYLKENAVN), sep = "", remove = FALSE) %>%
-    # Legge til faste kolonner
-    add_column("submitter" = submitter,
-               "fn" = fasta_filename,
-               "covv_type" = type,
-               "covv_passage" = passage,
-               "covv_host" = host,
-               "covv_gender" = gender,
-               "covv_patient_age" = age,
-               "covv_patient_status" = status,
-               "covv_specimen" = specimen,
-               "covv_seq_technology" = seq_tech,
-               "covv_assembly_method" = ass_method,
-               "covv_orig_lab" = orig_lab,
-               "covv_orig_lab_addr" = orig_adr,
-               "covv_subm_lab" = sub_lab,
-               "covv_subm_lab_addr" = address,
-               "covv_authors" = authors,
-               "covv_subm_sample_id" = covv_subm_sample_id,
-               "covv_outbreak" = covv_outbreak,
-               "covv_add_host_info" = covv_add_host_info,
-               "covv_add_location" = covv_add_location,
-               "covv_provider_sample_id" = covv_provider_sample_id,
-               "covv_last_vaccinated" = covv_last_vaccinated,
-               "covv_treatment" = covv_treatment) %>%
-    # Beholde endelige kolonner og rekkefølge
-    select("submitter",
-           "fn",
-           "covv_virus_name",
-           "covv_type",
-           "covv_passage",
-           "covv_collection_date" = PROVE_TATT,
-           "covv_location",
-           "covv_host",
-           "covv_gender",
-           "covv_patient_age",
-           "covv_patient_status",
-           "covv_specimen",
-           "covv_seq_technology",
-           "covv_assembly_method",
-           "covv_orig_lab",
-           "covv_orig_lab_addr",
-           "covv_subm_lab",
-           "covv_subm_lab_addr",
-           "covv_authors",
-           "covv_subm_sample_id",
-           "covv_outbreak",
-           "covv_add_host_info",
-           "covv_add_location",
-           "covv_provider_sample_id",
-           "covv_last_vaccinated",
-           "covv_treatment",
-           "covv_coverage"= COVERAGE_DEPTH_SWIFT)
-
-  #### Make fasta file ####
-
-  # Search the N: disk for consensus sequences. This could take a few minutes.
-  # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK",
-                        recursive = FALSE)
-  # Pick our the relevant oppsett
-  dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
-
-  # List the files
-  filepaths <- list.files(path = dir,
-                          pattern = "ivar\\.consensus\\.masked_Nremoved\\.fa$",
-                          full.names = TRUE,
-                          recursive = TRUE)
-
-  samples <- gsub("_.*","", gsub(".*/","", filepaths))
-
-  # Find which filepaths to keep
-  keep <- vector()
-  for (i in seq_along(oppsett_details$SEQUENCE_ID_TRIMMED)){
-    keep[i] <- filepaths[grep(oppsett_details$SEQUENCE_ID_TRIMMED[i], filepaths)]
-  }
-
-  # Read each fasta file and combine them to create one file
-  # First create empty data frame to fill
-  fastas <- data.frame(seq.name = character(),
-                       seq.text = character())
-
-  for (f in seq_along(keep)){
-    tmp <- read.fasta(keep[f])      # read the file
-    fastas <- rbind(fastas, tmp)    # append the current file
-  }
-
-  # Convert to tibble for easier manipulation
-  fastas <- as_tibble(fastas)
-
-  # Fix names to match SEQUENCEID_SWIFT
-  fastas <- fastas %>%
-    mutate(SEQUENCE_ID_TRIMMED = str_remove(seq.name, "_ivar_masked"))
-
-  # Sett Virus name som fasta header
-  # Først lage en mapping mellom SEQUENCEID_SWIFT og virus name
-  KEY_virus_mapping <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 1, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    select(SEQUENCEID_SWIFT, KEY, covv_virus_name, SEQUENCE_ID_TRIMMED)
-
-
-  fastas <- left_join(fastas, KEY_virus_mapping, by = "SEQUENCE_ID_TRIMMED") %>%
-    select(`seq.name` = covv_virus_name,
-           seq.text)
-
-  #### Run Frameshift analysis and write final files ####
-  FS(fastas, metadata)
+  
+  #### Lage metadata ####
+  metadata <- create_metadata(oppsett_details)
+  
+  #### Find sequences on N: ####
+  fastas <- find_sequences(platform, oppsett)
+  
+  #### Run Frameshift analysis ####
+  FS(fastas)
+  fastas_clean <- remove_FS_fasta(fastas)
+  metadata_clean <- remove_FS_metadata(metadata)
+  
+  #### Clean up and write files
+  clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
   
 } else if (platform == "Artic_Illumina") {
   print ("Platform is Artic Illumina")
@@ -587,9 +639,9 @@ if (platform == "Swift_FHI"){
     # Filtrer på coverage >= 97%
     filter(Dekning_Artic >=97) %>%
     # Fjerne de som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN))
-
-  #### Lage metadata ####
+    filter(!is.na(FYLKENAVN)) %>% 
+    mutate(SEARCH_COLUMN = KEY) %>% 
+    rename("COVERAGE" = RES_CDC_INFA_RX)
 
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
@@ -598,147 +650,20 @@ if (platform == "Swift_FHI"){
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
   authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
-
-  metadata <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    # Lage Location-kolonne
-    unite("covv_location", c(Continent, Country, FYLKENAVN), sep = "", remove = FALSE) %>%
-    # Legge til faste kolonner
-    add_column("submitter" = submitter,
-               "fn" = fasta_filename,
-               "covv_type" = type,
-               "covv_passage" = passage,
-               "covv_host" = host,
-               "covv_gender" = gender,
-               "covv_patient_age" = age,
-               "covv_patient_status" = status,
-               "covv_specimen" = specimen,
-               "covv_seq_technology" = seq_tech,
-               "covv_assembly_method" = ass_method,
-               "covv_orig_lab" = orig_lab,
-               "covv_orig_lab_addr" = orig_adr,
-               "covv_subm_lab" = sub_lab,
-               "covv_subm_lab_addr" = address,
-               "covv_authors" = authors,
-               "covv_subm_sample_id" = covv_subm_sample_id,
-               "covv_outbreak" = covv_outbreak,
-               "covv_add_host_info" = covv_add_host_info,
-               "covv_add_location" = covv_add_location,
-               "covv_provider_sample_id" = covv_provider_sample_id,
-               "covv_last_vaccinated" = covv_last_vaccinated,
-               "covv_treatment" = covv_treatment) %>%
-    # Beholde endelige kolonner og rekkefølge
-    select("submitter",
-           "fn",
-           "covv_virus_name",
-           "covv_type",
-           "covv_passage",
-           "covv_collection_date" = PROVE_TATT,
-           "covv_location",
-           "covv_host",
-           "covv_gender",
-           "covv_patient_age",
-           "covv_patient_status",
-           "covv_specimen",
-           "covv_seq_technology",
-           "covv_assembly_method",
-           "covv_orig_lab",
-           "covv_orig_lab_addr",
-           "covv_subm_lab",
-           "covv_subm_lab_addr",
-           "covv_authors",
-           "covv_subm_sample_id",
-           "covv_outbreak",
-           "covv_add_host_info",
-           "covv_add_location",
-           "covv_provider_sample_id",
-           "covv_last_vaccinated",
-           "covv_treatment",
-           "covv_coverage" = RES_CDC_INFA_RX,
-           "INNSENDER")
-
-  # Legge inn orig lab og adresse
-  metadata <- lookup_function(metadata)
-
-  # Remove column INNSENDER
-  metadata <- metadata %>% select(-INNSENDER)
-
-  #### Make fasta file ####
-
-  # Search the N: disk for consensus sequences. This could take a few minutes.
-  # List relevant folders to search through
-  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021",
-                        recursive = FALSE)
-  # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE)
-  # Pick our the relevant oppsett
-  dir <- dirs_fhi[grep(oppsett, dirs_fhi)]
-
-  # List the files
-  filepaths <- list.files(path = dir,
-                          pattern = "consensus\\.fa$",
-                          full.names = TRUE,
-                          recursive = TRUE)
-
-  # Dropper det siste tallet.
-  samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
-
-  # Find which filepaths to keep
-  keep <- vector()
-  for (i in seq_along(oppsett_details$KEY)){
-    keep[i] <- filepaths[grep(oppsett_details$KEY[i], filepaths)]
-  }
-
-  # Read each fasta file and combine them to create one file
-  # First create empty data frame to fill
-  fastas <- data.frame(seq.name = character(),
-                       seq.text = character())
-
-  for (f in seq_along(keep)){
-    tmp <- read.fasta(keep[f])      # read the file
-    fastas <- rbind(fastas, tmp)    # append the current file
-  }
-
-  # Convert to tibble for easier manipulation
-  fastas <- as_tibble(fastas)
-
-  # Fix names to match KEY
-  fastas <- fastas %>%
-    mutate(tmp = str_remove(seq.name, "Artic")) %>%
-    mutate(KEY = str_sub(tmp, start = 1, end = -2))
-
-  # Sett Virus name som fasta header
-  # Først lage en mapping mellom KEY og virus name
-  KEY_virus_mapping <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    select(KEY, covv_virus_name)
-
-
-  fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
-    select(`seq.name` = covv_virus_name,
-           seq.text)
   
-  #### Run Frameshift analysis and write final files ####
-  FS(fastas, metadata)
+  #### Lage metadata ####
+  metadata <- create_metadata(oppsett_details)
+  
+  #### Find sequences on N: ####
+  fastas <- find_sequences(platform, oppsett)
+  
+  #### Run Frameshift analysis ####
+  FS(fastas)
+  fastas_clean <- remove_FS_fasta(fastas)
+  metadata_clean <- remove_FS_metadata(metadata)
+  
+  #### Clean up and write files
+  clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
   
 } else if (platform == "Artic_Nanopore") {
   print ("Platform is Artic Nanopore")
@@ -754,10 +679,10 @@ if (platform == "Swift_FHI"){
     # Filtrer på coverage >= 97%
     filter(Dekning_Nano >=97) %>%
     # Fjerne de som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN))
-
-  #### Lage metadata ####
-
+    filter(!is.na(FYLKENAVN)) %>% 
+    mutate(SEARCH_COLUMN = KEY) %>% 
+    rename("COVERAGE" = COVARAGE_DEPTH_NANO)
+  
   # Add platform-specific columns.
   fasta_filename <- opt$fasta
   seq_tech <- "Nanopore GridIon, Midnight protocol modified"
@@ -765,146 +690,18 @@ if (platform == "Swift_FHI"){
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
   authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
-
-  metadata <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    # Lage Location-kolonne
-    unite("covv_location", c(Continent, Country, FYLKENAVN), sep = "", remove = FALSE) %>%
-    # Legge til faste kolonner
-    add_column("submitter" = submitter,
-               "fn" = fasta_filename,
-               "covv_type" = type,
-               "covv_passage" = passage,
-               "covv_host" = host,
-               "covv_gender" = gender,
-               "covv_patient_age" = age,
-               "covv_patient_status" = status,
-               "covv_specimen" = specimen,
-               "covv_seq_technology" = seq_tech,
-               "covv_assembly_method" = ass_method,
-               "covv_orig_lab" = orig_lab,
-               "covv_orig_lab_addr" = orig_adr,
-               "covv_subm_lab" = sub_lab,
-               "covv_subm_lab_addr" = address,
-               "covv_authors" = authors,
-               "covv_subm_sample_id" = covv_subm_sample_id,
-               "covv_outbreak" = covv_outbreak,
-               "covv_add_host_info" = covv_add_host_info,
-               "covv_add_location" = covv_add_location,
-               "covv_provider_sample_id" = covv_provider_sample_id,
-               "covv_last_vaccinated" = covv_last_vaccinated,
-               "covv_treatment" = covv_treatment) %>%
-    # Beholde endelige kolonner og rekkefølge
-    select("submitter",
-           "fn",
-           "covv_virus_name",
-           "covv_type",
-           "covv_passage",
-           "covv_collection_date" = PROVE_TATT,
-           "covv_location",
-           "covv_host",
-           "covv_gender",
-           "covv_patient_age",
-           "covv_patient_status",
-           "covv_specimen",
-           "covv_seq_technology",
-           "covv_assembly_method",
-           "covv_orig_lab",
-           "covv_orig_lab_addr",
-           "covv_subm_lab",
-           "covv_subm_lab_addr",
-           "covv_authors",
-           "covv_subm_sample_id",
-           "covv_outbreak",
-           "covv_add_host_info",
-           "covv_add_location",
-           "covv_provider_sample_id",
-           "covv_last_vaccinated",
-           "covv_treatment",
-           "covv_coverage" = COVARAGE_DEPTH_NANO,
-           "INNSENDER")
-
-  # Legge inn orig lab og adresse
-  metadata <- lookup_function(metadata)
-
-  # Remove column INNSENDER
-  metadata <- metadata %>% select(-INNSENDER)
-
-  #### Make fasta file ####
-
-  # Search the N: disk for consensus sequences. This could take a few minutes.
-  # List relevant folders to search through
-  # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE)
-  dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
-                        recursive = FALSE)
-  # Pick our the relevant oppsett
-  oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
-  dir <- dirs_fhi[grep(paste0(oppsett), dirs_fhi)]
-  #NB! Denne må automatiseres - hvordan? EN if statement om hvis RAPID så... eller temp... eller copy
-  #dir <- dir[-grep("RAPID", dir)]
-
-  # List the files
-  filepaths <- list.files(path = dir,
-                          pattern = "consensus\\.fasta$",
-                          full.names = TRUE,
-                          recursive = TRUE)
-
-  # Find which filepaths to keep
-  keep <- vector()
-  for (i in seq_along(oppsett_details$KEY)){
-    keep[i] <- filepaths[grep(oppsett_details$KEY[i], filepaths)]
-  }
-
-  # Read each fasta file and combine them to create one file
-  # First create empty data frame to fill
-  fastas <- data.frame(seq.name = character(),
-                       seq.text = character())
-
-  for (f in seq_along(keep)){
-    tmp <- read.fasta(keep[f])      # read the file
-    fastas <- rbind(fastas, tmp)    # append the current file
-  }
-
-  # Convert to tibble for easier manipulation
-  fastas <- as_tibble(fastas)
-
-  # Fix names to match KEY
-  fastas <- fastas %>%
-    # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
-    mutate(tmp = gsub("_.*", "", seq.name)) %>%
-    mutate(KEY = str_sub(tmp, start = 1, end = -2))
-
-  # Sett Virus name som fasta header
-  # Først lage en mapping mellom KEY og virus name
-  KEY_virus_mapping <- oppsett_details %>%
-    # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-    # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-    mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-    # Make "Virus name" column
-    unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-    select(KEY, covv_virus_name)
-
-
-  fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
-    select(`seq.name` = covv_virus_name,
-           seq.text)
   
-  #### Run Frameshift analysis and write final files ####
-  FS(fastas, metadata)
+  #### Lage metadata ####
+  metadata <- create_metadata(oppsett_details)
+  
+  #### Find sequences on N: ####
+  fastas <- find_sequences(platform, oppsett)
+  
+  #### Run Frameshift analysis ####
+  FS(fastas)
+  fastas_clean <- remove_FS_fasta(fastas)
+  metadata_clean <- remove_FS_metadata(metadata)
+  
+  #### Clean up and write files
+  clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
 }
