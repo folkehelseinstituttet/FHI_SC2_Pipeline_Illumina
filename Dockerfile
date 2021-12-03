@@ -70,6 +70,7 @@ RUN rm -rf /var/lib/apt/lists/* \
     && ln /usr/bin/gcc-9 /usr/bin/gcc \
     && ln /usr/bin/gcc-ranlib-9 /usr/bin/gcc-ranlib 
 RUN Rscript -e "BiocManager::install(c('msa','GenomicAlignments','ggtree'))"
+RUN Rscript -e "install.packages('lubridate')"
 RUN mkdir -p /home/docker/Scripts /home/docker/Data /home/docker/CommonFiles /home/docker/Fastq /home/docker/Binaries
 COPY CommonFiles/ /home/docker/CommonFiles/
 COPY Scripts/ /home/docker/Scripts/
