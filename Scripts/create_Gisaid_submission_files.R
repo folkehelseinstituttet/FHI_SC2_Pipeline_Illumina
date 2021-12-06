@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Load packages
-pacman::p_load(optparse, phylotools, tidyverse, readxl, stringr)
+pacman::p_load(optparse, phylotools, tidyverse, readxl, stringr, lubridate)
 
 # Parse options -----------------------------------------------------------
 option_list <- list(
