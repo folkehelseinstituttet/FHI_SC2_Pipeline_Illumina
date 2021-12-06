@@ -604,7 +604,7 @@ if (platform == "Swift_FHI"){
     mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>% 
     # Create column for looping through later
     mutate(SEARCH_COLUMN = SEQUENCE_ID_TRIMMED) %>% 
-    rename("COVERGE" = COVERAGE_DEPTH_SWIFT) %>% 
+    rename("COVERAGE" = COVERAGE_DEPTH_SWIFT) %>% 
     mutate("PROVE_TATT" = ymd(PROVE_TATT))
 
   # Add platform-specific columns.
