@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # Wrapper script for running "create_Gisaid_submission_files.R"
+# Example run:
+# declare -a array=("FHI200" "FHI201" "FHI202")
+# for oppsett in "${array[@]}"; do ./Binaries/create_gisaid_submission.sh -p "Swift_FHI" -o "${oppsett}" -f "${oppsett}".fasta -m "${oppsett}".csv -S "jonbra"; done
 
 # loop through arguments
 while getopts p:o:f:m:S: flag
