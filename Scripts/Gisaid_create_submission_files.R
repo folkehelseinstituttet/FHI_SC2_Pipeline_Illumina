@@ -550,6 +550,8 @@ if (platform == "Swift_FHI"){
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
     filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>%
+    # Remove previously submitted samples
+    filter(is.na(GISAID_EPI_ISL)) %>% 
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Filtrer på coverage >= 97%
@@ -590,6 +592,8 @@ if (platform == "Swift_FHI"){
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
     filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>%
+    # Remove previously submitted samples
+    filter(is.na(GISAID_EPI_ISL)) %>% 
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Filtrer på coverage >= 97%
@@ -636,6 +640,8 @@ if (platform == "Swift_FHI"){
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
     filter(str_detect(SAMPLE_CATEGORY, oppsett)) %>%
+    # Remove previously submitted samples
+    filter(is.na(GISAID_EPI_ISL)) %>% 
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Filtrer på coverage >= 97%
@@ -677,6 +683,8 @@ if (platform == "Swift_FHI"){
   # Trekk ut relevant oppsett og filtrer
   oppsett_details <- BN %>%
     filter(str_detect(SEKV_OPPSETT_NANOPORE, oppsett)) %>%
+    # Remove previously submitted samples
+    filter(is.na(GISAID_EPI_ISL)) %>% 
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Filtrer på coverage >= 97%
