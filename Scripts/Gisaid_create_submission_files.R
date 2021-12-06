@@ -251,7 +251,7 @@ find_sequences <- function(platform, oppsett) {
     samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
   } else if (platform == "Artic_Nanopore") {
     # Search the N: disk for consensus sequences. 
-    #dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE))
+    # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE)
     dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
                           recursive = FALSE)
     # Pick our the relevant oppsett
@@ -294,7 +294,9 @@ find_sequences <- function(platform, oppsett) {
   } else if (platform == "Swift_MIK") {
     # Fix names to match SEQUENCEID_SWIFT
     fastas <- fastas %>%
-      mutate(SEQUENCE_ID_TRIMMED = str_remove(seq.name, "_ivar_masked"))
+      mutate("tmp" = str_remove(seq.name, "_ivar_masked")) %>%
+      # Some of the MIK-samples have a leading number in front of OUS
+      mutate(SEQUENCE_ID_TRIMMED = gsub(".*OUS-", "", .$tmp))
   } else if (platform == "Artic_Illumina") {
     # Fix names to match KEY
     fastas <- fastas %>%
@@ -407,76 +409,81 @@ create_metadata <- function(oppsett_details) {
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
       mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1))
   }
-  metadata <- metadata %>% 
-    # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-    add_column("Separator" = "/",
-               "GISAID_prefix" = "hCoV-19/",
-               "Country" = "Norway/",
-               "Continent" = "Europe/") %>%
-  # Make "Virus name" column
-  unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-  # Lage Location-kolonne
-  unite("covv_location", c(Continent, Country, FYLKENAVN), sep = "", remove = FALSE) %>%
-  # Legge til faste kolonner
-  add_column("submitter" = submitter,
-             "fn" = fasta_filename,
-             "covv_type" = type,
-             "covv_passage" = passage,
-             "covv_host" = host,
-             "covv_gender" = gender,
-             "covv_patient_age" = age,
-             "covv_patient_status" = status,
-             "covv_specimen" = specimen,
-             "covv_seq_technology" = seq_tech,
-             "covv_assembly_method" = ass_method,
-             "covv_orig_lab" = orig_lab,
-             "covv_orig_lab_addr" = orig_adr,
-             "covv_subm_lab" = sub_lab,
-             "covv_subm_lab_addr" = address,
-             "covv_authors" = authors,
-             "covv_subm_sample_id" = covv_subm_sample_id,
-             "covv_outbreak" = covv_outbreak,
-             "covv_add_host_info" = covv_add_host_info,
-             "covv_add_location" = covv_add_location,
-             "covv_provider_sample_id" = covv_provider_sample_id,
-             "covv_last_vaccinated" = covv_last_vaccinated,
-             "covv_treatment" = covv_treatment) %>% 
-    # Beholde endelige kolonner og rekkefølge
-    select("submitter",
-           "fn",
-           "covv_virus_name",
-           "covv_type",
-           "covv_passage",
-           "covv_collection_date" = PROVE_TATT,
-           "covv_location",
-           "covv_host",
-           "covv_gender",
-           "covv_patient_age",
-           "covv_patient_status",
-           "covv_specimen",
-           "covv_seq_technology",
-           "covv_assembly_method",
-           "covv_orig_lab",
-           "covv_orig_lab_addr",
-           "covv_subm_lab",
-           "covv_subm_lab_addr",
-           "covv_authors",
-           "covv_subm_sample_id",
-           "covv_outbreak",
-           "covv_add_host_info",
-           "covv_add_location",
-           "covv_provider_sample_id",
-           "covv_last_vaccinated",
-           "covv_treatment",
-           "covv_coverage" = COVERAGE,
-           "INNSENDER")
-
-  # Legge inn orig lab og adresse
-  metadata <- lookup_function(metadata)
-
-  # Remove column INNSENDER
-  metadata <- metadata %>% select(-INNSENDER)
   
+    metadata <- metadata %>% 
+      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+      add_column("Separator" = "/",
+                 "GISAID_prefix" = "hCoV-19/",
+                 "Country" = "Norway/",
+                 "Continent" = "Europe/") %>%
+      # Make "Virus name" column
+      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+      # Lage Location-kolonne
+      unite("covv_location", c(Continent, Country, FYLKENAVN), sep = "", remove = FALSE) %>%
+      # Legge til faste kolonner
+      add_column("submitter" = submitter,
+                 "fn" = fasta_filename,
+                 "covv_type" = type,
+                 "covv_passage" = passage,
+                 "covv_host" = host,
+                 "covv_gender" = gender,
+                 "covv_patient_age" = age,
+                 "covv_patient_status" = status,
+                 "covv_specimen" = specimen,
+                 "covv_seq_technology" = seq_tech,
+                 "covv_assembly_method" = ass_method,
+                 "covv_orig_lab" = orig_lab,
+                 "covv_orig_lab_addr" = orig_adr,
+                 "covv_subm_lab" = sub_lab,
+                 "covv_subm_lab_addr" = address,
+                 "covv_authors" = authors,
+                 "covv_subm_sample_id" = covv_subm_sample_id,
+                 "covv_outbreak" = covv_outbreak,
+                 "covv_add_host_info" = covv_add_host_info,
+                 "covv_add_location" = covv_add_location,
+                 "covv_provider_sample_id" = covv_provider_sample_id,
+                 "covv_last_vaccinated" = covv_last_vaccinated,
+                 "covv_treatment" = covv_treatment) %>% 
+      # Beholde endelige kolonner og rekkefølge
+      select("submitter",
+             "fn",
+             "covv_virus_name",
+             "covv_type",
+             "covv_passage",
+             "covv_collection_date" = PROVE_TATT,
+             "covv_location",
+             "covv_host",
+             "covv_gender",
+             "covv_patient_age",
+             "covv_patient_status",
+             "covv_specimen",
+             "covv_seq_technology",
+             "covv_assembly_method",
+             "covv_orig_lab",
+             "covv_orig_lab_addr",
+             "covv_subm_lab",
+             "covv_subm_lab_addr",
+             "covv_authors",
+             "covv_subm_sample_id",
+             "covv_outbreak",
+             "covv_add_host_info",
+             "covv_add_location",
+             "covv_provider_sample_id",
+             "covv_last_vaccinated",
+             "covv_treatment",
+             "covv_coverage" = COVERAGE,
+             "INNSENDER")
+  
+  if (platform == "Swift_MIK") {
+    # Remove column INNSENDER
+    metadata <- metadata %>% select(-INNSENDER)
+  } else {
+    # Legge inn orig lab og adresse
+    metadata <- lookup_function(metadata)
+    
+    # Remove column INNSENDER
+    metadata <- metadata %>% select(-INNSENDER)
+  } 
   return(metadata)
 }
 # Define Frameshift function ----------------------------------------------
