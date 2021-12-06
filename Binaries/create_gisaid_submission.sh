@@ -28,4 +28,4 @@ docker run -it --rm \
   -v /mnt/N/Virologi/:/home/docker/N \
   -v $(pwd):/home/docker/Fastq \
   garcianacho/fhisc2:Illumina \
-  Rscript --vanilla /home/docker/Scripts/create_Gisaid_submission_files.R -p $platform -o $oppsett -f $fasta -m $metadata -S $submitter
+  Rscript --vanilla /home/docker/Scripts/Gisaid_create_submission_files.R -p $platform -o $oppsett -f $fasta -m $metadata -S $submitter
