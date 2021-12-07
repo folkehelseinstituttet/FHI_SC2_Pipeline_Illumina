@@ -565,6 +565,8 @@ if (platform == "Swift_FHI"){
     filter(Dekning_Swift >=97) %>%
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN)) %>% 
+    # Det kan også stå "ukjent" som Fylkenavn - ta bort
+    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
     # Create column for looping through later
     mutate(SEARCH_COLUMN = KEY) %>% 
     rename("COVERAGE" = COVERAGE_DEPTH_SWIFT) %>% 
@@ -607,6 +609,8 @@ if (platform == "Swift_FHI"){
     filter(Dekning_Swift >=97) %>%
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN)) %>%
+    # Det kan også stå "ukjent" som Fylkenavn - ta bort
+    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
     # Remove "OUS-" from Sequence ID
     mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>% 
     # Create column for looping through later
@@ -655,6 +659,8 @@ if (platform == "Swift_FHI"){
     filter(Dekning_Artic >=97) %>%
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN)) %>% 
+    # Det kan også stå "ukjent" som Fylkenavn - ta bort
+    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
     mutate(SEARCH_COLUMN = KEY) %>% 
     rename("COVERAGE" = RES_CDC_INFA_RX) %>% 
     mutate("PROVE_TATT" = ymd(PROVE_TATT))
@@ -698,6 +704,8 @@ if (platform == "Swift_FHI"){
     filter(Dekning_Nano >=97) %>%
     # Fjerne de som mangler Fylkenavn
     filter(!is.na(FYLKENAVN)) %>% 
+    # Det kan også stå "ukjent" som Fylkenavn - ta bort
+    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
     mutate(SEARCH_COLUMN = KEY) %>% 
     rename("COVERAGE" = COVARAGE_DEPTH_NANO) %>% 
     mutate("PROVE_TATT" = ymd(PROVE_TATT))
