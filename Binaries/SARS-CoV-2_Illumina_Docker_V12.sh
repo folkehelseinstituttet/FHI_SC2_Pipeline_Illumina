@@ -44,7 +44,7 @@ cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3.2/nCoV-20
 fi
 
 if [ ${1} == "ArticV4" ]; then
-cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4/SARS-CoV-2.primer.bed /home/docker/Fastq/primers.bed
+cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4.1/SARS-CoV-2.primer.bed /home/docker/Fastq/primers.bed
 fi
 
 
