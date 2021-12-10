@@ -26,7 +26,7 @@ if (is.null(opt$platform)){
   print_help(opt_parser)
   stop("At least one argument must be supplied", call.=FALSE)
 }
-
+fasta_filename <- opt$fasta
 # Read data from BioNumerics ----------------------------------------------
 # Les inn BN spørring. Husk å Refreshe og lagre den originale excel-fila først (N:/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx)
 BN <- suppressWarnings(read_excel("/home/docker/N/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
@@ -198,6 +198,63 @@ lookup_function <- function(metadata) {
 
 
 
+
+
+# Define filter function --------------------------------------------------
+filter_BN <- function(BN) {
+  tmp <- BN %>% 
+    # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
+    filter(!is.na(MELDT_SMITTESPORING)) %>% 
+    # Remove previously submitted samples
+    filter(is.na(GISAID_EPI_ISL)) %>% 
+    # Fjerne evt positiv controll
+    filter(str_detect(KEY, "pos", negate = TRUE)) %>%
+    # Fjerne prøver som mangler Fylkenavn
+    filter(!is.na(FYLKENAVN)) %>% 
+    # Det kan også stå "Ukjent" som Fylkenavn - ta bort
+    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
+    # Endre Trøndelag til Trondelag
+    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Trøndelag", "Trondelag")) %>% 
+    # Endre Møre og Romsdal
+    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Møre", "More")) %>% 
+    # Fix date format
+    mutate("PROVE_TATT" = ymd(PROVE_TATT))
+  
+  if (platform == "Artic_Illumina") {
+    oppsett_details <- tmp %>% 
+      filter(str_detect(SAMPLE_CATEGORY, oppsett)) %>% 
+      # Filtrer på coverage >= 97%
+      filter(Dekning_Artic >=97) %>% 
+      mutate(SEARCH_COLUMN = KEY) %>% 
+      rename("COVERAGE" = RES_CDC_INFA_RX)
+  } else if (platform == "Artic_Nanopore") {
+    oppsett_details <- tmp %>% 
+      filter(str_detect(SEKV_OPPSETT_NANOPORE, oppsett)) %>% 
+      # Filtrer på coverage >= 97%
+      filter(Dekning_Nano >=97) %>% 
+      mutate(SEARCH_COLUMN = KEY) %>% 
+      rename("COVERAGE" = COVARAGE_DEPTH_NANO)
+  } else if (platform == "Swift_FHI") {
+    oppsett_details <- tmp %>% 
+      filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>% 
+      # Filtrer på coverage >= 97%
+      filter(Dekning_Swift >=97) %>% 
+      # Create column for looping through later
+      mutate(SEARCH_COLUMN = KEY) %>% 
+      rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
+  } else if (platform == "Swift_MIK") {
+    oppsett_details <- tmp %>% 
+      filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>% 
+      # Filtrer på coverage >= 97%
+      filter(Dekning_Swift >=97) %>% 
+      # Remove "OUS-" from Sequence ID
+      mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>% 
+      # Create column for looping through later
+      mutate(SEARCH_COLUMN = SEQUENCE_ID_TRIMMED) %>% 
+      rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
+  }
+    return(oppsett_details)
+}
 
 # Find sequences on N: and create fasta object ----------------------------
 find_sequences <- function(platform, oppsett) {
@@ -550,35 +607,16 @@ clean_up_and_write <- function(fastas_clean, metadata_clean) {
 
 if (platform == "Swift_FHI"){
   print ("Platform is Swift FHI")
-  # Swift FHI ---------------------------------------------------------------
-
-  #### Trekke ut prøver ####
-
-  # Trekk ut relevant oppsett og filtrer
-  oppsett_details <- BN %>%
-    filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>%
-    # Remove previously submitted samples
-    filter(is.na(GISAID_EPI_ISL)) %>% 
-    # Fjerne evt positiv controll
-    filter(str_detect(KEY, "pos", negate = TRUE)) %>%
-    # Filtrer på coverage >= 97%
-    filter(Dekning_Swift >=97) %>%
-    # Fjerne de som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN)) %>% 
-    # Det kan også stå "ukjent" som Fylkenavn - ta bort
-    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
-    # Create column for looping through later
-    mutate(SEARCH_COLUMN = KEY) %>% 
-    rename("COVERAGE" = COVERAGE_DEPTH_SWIFT) %>% 
-    mutate("PROVE_TATT" = ymd(PROVE_TATT))
-
+  
   # Add platform-specific columns.
-  fasta_filename <- opt$fasta
   seq_tech <- "Illumina Swift Amplicon SARS-CoV-2 protocol at Norwegian Sequencing Centre"
   ass_method <- "Assembly by reference based mapping using Bowtie2 with iVar majority rules consensus"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
   authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
+  
+  #### Trekke ut prøver ####
+  oppsett_details <- filter_BN(BN)
 
   #### Lage metadata ####
   metadata <- create_metadata(oppsett_details)
@@ -596,30 +634,8 @@ if (platform == "Swift_FHI"){
 
 } else if (platform == "Swift_MIK") {
   print ("Platform is Swift MIK")
-  # Swift MIK/OUS------------------------------------------------------------
-  #### Trekke ut prøver ####
-  # Trekk ut relevant oppsett og filtrer
-  oppsett_details <- BN %>%
-    filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>%
-    # Remove previously submitted samples
-    filter(is.na(GISAID_EPI_ISL)) %>% 
-    # Fjerne evt positiv controll
-    filter(str_detect(KEY, "pos", negate = TRUE)) %>%
-    # Filtrer på coverage >= 97%
-    filter(Dekning_Swift >=97) %>%
-    # Fjerne de som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN)) %>%
-    # Det kan også stå "ukjent" som Fylkenavn - ta bort
-    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
-    # Remove "OUS-" from Sequence ID
-    mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>% 
-    # Create column for looping through later
-    mutate(SEARCH_COLUMN = SEQUENCE_ID_TRIMMED) %>% 
-    rename("COVERAGE" = COVERAGE_DEPTH_SWIFT) %>% 
-    mutate("PROVE_TATT" = ymd(PROVE_TATT))
 
   # Add platform-specific columns.
-  fasta_filename <- opt$fasta
   seq_tech <- "Illumina Swift Amplicon SARS-CoV-2 protocol at Norwegian Sequencing Centre"
   ass_method <- "Assembly by reference based mapping using Bowtie2 with iVar majority rules consensus"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
@@ -628,6 +644,9 @@ if (platform == "Swift_FHI"){
   orig_lab <- "Oslo University Hospital, Department of Microbiology"
   orig_adr <- "P.O.Box 4956 Nydalen, N-0424 Oslo, Norway"
   
+  #### Trekke ut prøver ####
+  oppsett_details <- filter_BN(BN)
+
   #### Lage metadata ####
   metadata <- create_metadata(oppsett_details)
   
@@ -644,35 +663,17 @@ if (platform == "Swift_FHI"){
   
 } else if (platform == "Artic_Illumina") {
   print ("Platform is Artic Illumina")
-  # Artic Illumina ----------------------------------------------------------
-
-  ##### Trekke ut prøver ####
-
-  # Trekk ut relevant oppsett og filtrer
-  oppsett_details <- BN %>%
-    filter(str_detect(SAMPLE_CATEGORY, oppsett)) %>%
-    # Remove previously submitted samples
-    filter(is.na(GISAID_EPI_ISL)) %>% 
-    # Fjerne evt positiv controll
-    filter(str_detect(KEY, "pos", negate = TRUE)) %>%
-    # Filtrer på coverage >= 97%
-    filter(Dekning_Artic >=97) %>%
-    # Fjerne de som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN)) %>% 
-    # Det kan også stå "ukjent" som Fylkenavn - ta bort
-    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
-    mutate(SEARCH_COLUMN = KEY) %>% 
-    rename("COVERAGE" = RES_CDC_INFA_RX) %>% 
-    mutate("PROVE_TATT" = ymd(PROVE_TATT))
 
   # Add platform-specific columns.
-  fasta_filename <- opt$fasta
   seq_tech <- "Illumina MiSeq, modified ARTIC protocol with V4 primers"
   ass_method <- "Assembly by reference based mapping using Tanoti with iVar majority rules consensus"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
   authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
   
+  ##### Trekke ut prøver ####
+  oppsett_details <- filter_BN(BN)
+
   #### Lage metadata ####
   metadata <- create_metadata(oppsett_details)
   
@@ -689,34 +690,16 @@ if (platform == "Swift_FHI"){
   
 } else if (platform == "Artic_Nanopore") {
   print ("Platform is Artic Nanopore")
-  # Artic Nanopore ----------------------------------------------------------
-
-  ##### Trekke ut prøver ####
-
-  # Trekk ut relevant oppsett og filtrer
-  oppsett_details <- BN %>%
-    filter(str_detect(SEKV_OPPSETT_NANOPORE, oppsett)) %>%
-    # Remove previously submitted samples
-    filter(is.na(GISAID_EPI_ISL)) %>% 
-    # Fjerne evt positiv controll
-    filter(str_detect(KEY, "pos", negate = TRUE)) %>%
-    # Filtrer på coverage >= 97%
-    filter(Dekning_Nano >=97) %>%
-    # Fjerne de som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN)) %>% 
-    # Det kan også stå "ukjent" som Fylkenavn - ta bort
-    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
-    mutate(SEARCH_COLUMN = KEY) %>% 
-    rename("COVERAGE" = COVARAGE_DEPTH_NANO) %>% 
-    mutate("PROVE_TATT" = ymd(PROVE_TATT))
   
   # Add platform-specific columns.
-  fasta_filename <- opt$fasta
   seq_tech <- "Nanopore GridIon, Midnight protocol modified"
   ass_method <- "Assembly by reference based mapping using the Artic Nanopore protocol with medaka"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
   authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
+  
+  ##### Trekke ut prøver ####
+  oppsett_details <- filter_BN(BN)
   
   #### Lage metadata ####
   metadata <- create_metadata(oppsett_details)
