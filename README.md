@@ -65,4 +65,7 @@ It is possible to download a template of the xlsx file [here](https://github.com
 -Quality-control for contaminations/low-quality samples   
 -Amplicon efficacy of the selected primer-set for all the samples   
 
- 
+## Under the hood   
+This pipeline is based on the [FHI's base docker image](https://github.com/garcia-nacho/fhibase) which bundles all linux-packages required by the bioinformatic tools plus R v4.1.1. On top of the base image lays a second docker image containing all bioinformatic tools required (e.g. Tanoti, nextclade, ivar, etc). The final docker image is based on the bioinformatic-image plus the Scripts and CommonFiles required to run.   
+If you want, you can rebuild the two images using the Dockerfiles located on the *fhibase* and *fhibaseillumina* folders.    
+Note that rebuilding the images can lead to broken dependencies since they used public repositories.   
