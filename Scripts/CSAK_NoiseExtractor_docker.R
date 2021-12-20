@@ -93,6 +93,9 @@ if(length(bamfiles)>0){
       summary$NoisePositions[i]<-length(which(dummy$Outlier=="YES"))
       summary$MissingPositions[i]<-length(dummy$Base[which(dummy$Reads<5)])
       summary$NormNoisePositions[i]<- length(which(dummy$Outlier=="YES"))/(29903 - length(dummy$Base[which(dummy$Reads<5)]))
+     
+      if(is.infinite(summary$NormNoisePositions[i])) summary$NormNoisePositions[i]<-1 #Fix Nacho 20122021
+
       summary$meanNoise[i]<-mean(dummy$Noise, na.rm=TRUE)
       summary$SDNoise[i]<-sd(dummy$Noise, na.rm=TRUE)
       summary$meanCov[i]<-mean(dummy$Reads, na.rm=TRUE)
