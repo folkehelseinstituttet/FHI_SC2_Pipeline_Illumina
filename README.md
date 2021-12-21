@@ -9,7 +9,7 @@ Docker-based solution for sequence analysis of SARS-CoV-2 Illumina samples
 [ArticV4](https://github.com/artic-network/artic-ncov2019/tree/master/primer_schemes/nCoV-2019/V4)   
 
 ## Installation
-<code>git clone https://github.com/garcia-nacho/FHI_SC2_Pipeline_Illumina </code>  
+<code>git clone https://github.com/folkehelseinstituttet/FHI_SC2_Pipeline_Illumina/ </code>  
 <code> cd FHI_SC2_Pipeline_Illumina </code>   
 <code> docker build -t garcianacho/fhisc2:Illumina . </code>
  
