@@ -50,6 +50,10 @@ results<-list.files(results,full.names = TRUE)
 
 primers<-read.csv("/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4/SARS-CoV-2.primer.bed",
                   sep = "\t", header = FALSE)
+
+#Temporal solution for alternative primers 21122021 Nacho
+if(length(grep("alt",primers$V4))>0) primers<-primers[-grep("alt",primers$V4)]
+
 summary<-list.files(input.folder,full.names = TRUE, pattern = "_NextcladeAndPangolin.csv",recursive = TRUE)
 
 summary<-read.csv(summary, sep = "\t")
