@@ -29,14 +29,14 @@ if (is.null(opt$platform)){
 fasta_filename <- opt$fasta
 # Read data from BioNumerics ----------------------------------------------
 # Les inn BN spørring. Husk å Refreshe og lagre den originale excel-fila først (N:/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx)
-BN <- suppressWarnings(read_excel("/home/docker/N/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
-  select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7,
-         SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE,
-         SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>%
-  rename("Dekning_Artic" = PROSENTDEKNING_GENOM,
-         "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
-         "Dekning_Nano" = DEKNING_NANOPORE))
-
+#BN <- suppressWarnings(read_excel("/home/docker/N/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
+#  select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7,
+#         SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE,
+#         SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>%
+#  rename("Dekning_Artic" = PROSENTDEKNING_GENOM,
+#         "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
+#         "Dekning_Nano" = DEKNING_NANOPORE))
+load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData")
 # BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>% select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7, SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE, SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>% rename("Dekning_Artic" = PROSENTDEKNING_GENOM, "Dekning_Swift" = COVERAGE_BREADTH_SWIFT, "Dekning_Nano" = DEKNING_NANOPORE)
 
 # Set parameters ----------------------------------------------------------
@@ -206,11 +206,13 @@ filter_BN <- function(BN) {
     # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
     filter(!is.na(MELDT_SMITTESPORING)) %>% 
     # Remove previously submitted samples
-    filter(is.na(GISAID_EPI_ISL)) %>% 
+    filter(GISAID_EPI_ISL == "") %>% 
+    #filter(is.na(GISAID_EPI_ISL)) %>% 
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Fjerne prøver som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN)) %>% 
+    filter(FYLKENAVN != "") %>% 
+    #filter(!is.na(FYLKENAVN)) %>% 
     # Det kan også stå "Ukjent" som Fylkenavn - ta bort
     filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
     # Endre Trøndelag til Trondelag
@@ -223,30 +225,30 @@ filter_BN <- function(BN) {
   if (platform == "Artic_Illumina") {
     oppsett_details <- tmp %>% 
       filter(str_detect(SAMPLE_CATEGORY, oppsett)) %>% 
-      # Filtrer på coverage >= 97%
-      filter(Dekning_Artic >=97) %>% 
+      # Filtrer på coverage >= 94%
+      filter(Dekning_Artic >=94) %>% 
       mutate(SEARCH_COLUMN = KEY) %>% 
       rename("COVERAGE" = RES_CDC_INFA_RX)
   } else if (platform == "Artic_Nanopore") {
     oppsett_details <- tmp %>% 
       filter(str_detect(SEKV_OPPSETT_NANOPORE, oppsett)) %>% 
-      # Filtrer på coverage >= 97%
-      filter(Dekning_Nano >=97) %>% 
+      # Filtrer på coverage >= 94%
+      filter(Dekning_Nano >=94) %>% 
       mutate(SEARCH_COLUMN = KEY) %>% 
       rename("COVERAGE" = COVARAGE_DEPTH_NANO)
   } else if (platform == "Swift_FHI") {
     oppsett_details <- tmp %>% 
       filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>% 
-      # Filtrer på coverage >= 97%
-      filter(Dekning_Swift >=97) %>% 
+      # Filtrer på coverage >= 94%
+      filter(Dekning_Swift >=94) %>% 
       # Create column for looping through later
       mutate(SEARCH_COLUMN = KEY) %>% 
       rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
   } else if (platform == "Swift_MIK") {
     oppsett_details <- tmp %>% 
       filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>% 
-      # Filtrer på coverage >= 97%
-      filter(Dekning_Swift >=97) %>% 
+      # Filtrer på coverage >= 94%
+      filter(Dekning_Swift >=94) %>% 
       # Remove "OUS-" from Sequence ID
       mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>% 
       # Create column for looping through later
@@ -597,10 +599,19 @@ clean_up_and_write <- function(fastas_clean, metadata_clean) {
 
   suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
   suppressMessages(try(setwd("/home/docker/Fastq/")))
-  file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
-  file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett, ".xlsx"))
-  write_csv(metadata_clean, file = opt$metadata)
-  dat2fasta(fastas_clean, outfile = fasta_filename)
+  
+  if (platform == "Artic_Nanopore") {
+    oppsett_stripped <- gsub("/", "", oppsett)
+    file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
+    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett_stripped, ".xlsx"))
+    write_csv(metadata_clean, file = paste0(oppsett_stripped, ".csv"))
+    dat2fasta(fastas_clean, outfile = paste0(oppsett_stripped, ".fasta"))
+  } else {
+    file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
+    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett, ".xlsx"))
+    write_csv(metadata_clean, file = opt$metadata)
+    dat2fasta(fastas_clean, outfile = fasta_filename)
+  }
 }
 
 # Start script ------------------------------------------------------------
