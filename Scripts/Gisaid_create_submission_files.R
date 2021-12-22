@@ -216,7 +216,9 @@ filter_BN <- function(BN) {
     # Endre Trøndelag til Trondelag
     mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Tr\xf8ndelag", "Trondelag")) %>% 
     # Endre Møre og Romsdal
-    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "M\xf8re", "More")) %>% 
+    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "M\xf8re", "More")) %>%
+    # Endre Sør
+    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "S\xf8r", "Sor")) %>%
     # Fix date format
     mutate("PROVE_TATT" = ymd(PROVE_TATT))
   
