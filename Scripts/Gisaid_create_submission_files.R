@@ -203,28 +203,28 @@ lookup_function <- function(metadata) {
 # Define filter function --------------------------------------------------
 filter_BN <- function(BN) {
   tmp <- BN %>% 
-    # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
-    filter(!is.na(MELDT_SMITTESPORING)) %>% 
     # Remove previously submitted samples
     filter(GISAID_EPI_ISL == "") %>% 
     #filter(is.na(GISAID_EPI_ISL)) %>% 
     # Fjerne evt positiv controll
-    filter(str_detect(KEY, "pos", negate = TRUE)) %>%
+    filter(str_detect(KEY, "pos", negate = TRUE)) %>% 
     # Fjerne prøver som mangler Fylkenavn
     filter(FYLKENAVN != "") %>% 
     #filter(!is.na(FYLKENAVN)) %>% 
     # Det kan også stå "Ukjent" som Fylkenavn - ta bort
-    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>%
+    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
     # Endre Trøndelag til Trondelag
     mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Tr\xf8ndelag", "Trondelag")) %>% 
     # Endre Møre og Romsdal
     mutate("FYLKENAVN" = str_replace(FYLKENAVN, "M\xf8re", "More")) %>% 
     # Fix date format
-    mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% filter(str_detect(FYLKENAVN, "Trondelag"))
+    mutate("PROVE_TATT" = ymd(PROVE_TATT))
   
   if (platform == "Artic_Illumina") {
     oppsett_details <- tmp %>% 
       filter(str_detect(SAMPLE_CATEGORY, oppsett)) %>% 
+      # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
+      filter(!is.na(MELDT_SMITTESPORING)) %>%
       # Filtrer på coverage >= 94%
       filter(Dekning_Artic >=94) %>% 
       mutate(SEARCH_COLUMN = KEY) %>% 
@@ -232,6 +232,8 @@ filter_BN <- function(BN) {
   } else if (platform == "Artic_Nanopore") {
     oppsett_details <- tmp %>% 
       filter(str_detect(SEKV_OPPSETT_NANOPORE, oppsett)) %>% 
+      # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
+      filter(!is.na(MELDT_SMITTESPORING)) %>% 
       # Filtrer på coverage >= 94%
       filter(Dekning_Nano >=94) %>% 
       mutate(SEARCH_COLUMN = KEY) %>% 
@@ -239,6 +241,8 @@ filter_BN <- function(BN) {
   } else if (platform == "Swift_FHI") {
     oppsett_details <- tmp %>% 
       filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>% 
+      # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
+      filter(!is.na(MELDT_SMITTESPORING)) %>% 
       # Filtrer på coverage >= 94%
       filter(Dekning_Swift >=94) %>% 
       # Create column for looping through later
