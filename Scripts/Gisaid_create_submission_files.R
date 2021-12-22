@@ -214,13 +214,13 @@ filter_BN <- function(BN) {
     filter(FYLKENAVN != "") %>% 
     #filter(!is.na(FYLKENAVN)) %>% 
     # Det kan også stå "Ukjent" som Fylkenavn - ta bort
-    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>% 
+    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>%
     # Endre Trøndelag til Trondelag
-    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Trøndelag", "Trondelag")) %>% 
+    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Tr\xf8ndelag", "Trondelag")) %>% 
     # Endre Møre og Romsdal
-    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Møre", "More")) %>% 
+    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "M\xf8re", "More")) %>% 
     # Fix date format
-    mutate("PROVE_TATT" = ymd(PROVE_TATT))
+    mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% filter(str_detect(FYLKENAVN, "Trondelag"))
   
   if (platform == "Artic_Illumina") {
     oppsett_details <- tmp %>% 
