@@ -37,6 +37,7 @@ fasta_filename <- opt$fasta
 #         "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
 #         "Dekning_Nano" = DEKNING_NANOPORE))
 load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData")
+# load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData")
 # BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>% select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7, SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE, SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>% rename("Dekning_Artic" = PROSENTDEKNING_GENOM, "Dekning_Swift" = COVERAGE_BREADTH_SWIFT, "Dekning_Nano" = DEKNING_NANOPORE)
 
 # Set parameters ----------------------------------------------------------
@@ -316,9 +317,10 @@ find_sequences <- function(platform, oppsett) {
     samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
   } else if (platform == "Artic_Nanopore") {
     # Search the N: disk for consensus sequences. 
-    # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE)
-    dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
-                          recursive = FALSE)
+    try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", 
+                              recursive = FALSE))
+    try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
+                          recursive = FALSE))
     # Pick our the relevant oppsett
     oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
     dir <- dirs_fhi[grep(paste0(oppsett), dirs_fhi)]
@@ -562,7 +564,7 @@ FS <- function(fastas){
   dat2fasta(fastas, outfile = "tmp.fasta")
   
   # Run the frameshift script
-  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
+  try(system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R"))
   # system("docker run --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
   
 }
