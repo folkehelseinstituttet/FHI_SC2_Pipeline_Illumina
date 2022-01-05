@@ -13,6 +13,8 @@ load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData")
 
 # Check Swift FHI
 BN %>%
+  # Filtrer på coverage >= 94%
+  filter(Dekning_Swift >=94) %>% 
   # Format the date 
   mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% 
   # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
@@ -34,6 +36,8 @@ BN %>%
 
 # Check Artic Illumina
 BN %>%
+  # Filtrer på coverage >= 94%
+  filter(Dekning_Artic >=94) %>% 
   # Format the date 
   mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% 
   # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
@@ -42,7 +46,8 @@ BN %>%
   filter(str_detect(KEY, "pos", negate = TRUE)) %>%
   # Fjerne de som allerede er submittet til Gisaid. NB - husk å importere submisjonsresultater først.
   # Using the is.na() filter because there could be other strings than the EPI_ISL accession written
-  filter(is.na(GISAID_EPI_ISL)) %>% 
+  filter(GISAID_EPI_ISL == "") %>% 
+  #filter(is.na(GISAID_EPI_ISL)) %>% 
   # Get the various plates
   select(KEY, PROVE_TATT, SAMPLE_CATEGORY) %>%
   filter(str_detect(SAMPLE_CATEGORY, "naekstrakt", negate = TRUE)) %>% 
@@ -52,7 +57,10 @@ BN %>%
   # Sort by date
   arrange(desc(PROVE_TATT)) %>% View()
 
+# Check Nanopore
 BN %>%
+  # Filtrer på coverage >= 94%
+  filter(Dekning_Nano >=94) %>% 
   # Format the date 
   mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% 
   # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
@@ -61,27 +69,31 @@ BN %>%
   filter(str_detect(KEY, "pos", negate = TRUE)) %>%
   # Fjerne de som allerede er submittet til Gisaid. NB - husk å importere submisjonsresultater først.
   # Using the is.na() filter because there could be other strings than the EPI_ISL accession written
-  filter(is.na(GISAID_EPI_ISL)) %>% 
+  filter(GISAID_EPI_ISL == "") %>% 
+  #filter(is.na(GISAID_EPI_ISL)) %>% 
   # Get the various plates
-  select(KEY, PROVE_TATT, SEKV_OPPSETT_NANOPORE, SEKV_OPPSETT_SWIFT7, SAMPLE_CATEGORY) %>%
+  select(KEY, PROVE_TATT, SEKV_OPPSETT_NANOPORE) %>%
   # Select one sample per oppsett
-  group_by(SEKV_OPPSETT_NANOPORE, SEKV_OPPSETT_SWIFT7, SAMPLE_CATEGORY) %>% 
+  group_by(SEKV_OPPSETT_NANOPORE) %>% 
   slice_head(n = 1) %>% 
   # Sort by date
   arrange(desc(PROVE_TATT)) %>% View()
 
 # Check MIK
 BN %>%
+  # Filtrer på coverage >= 94%
+  filter(Dekning_Swift >=94) %>% 
   filter(str_detect(SEKV_OPPSETT_SWIFT7, "MIK")) %>% 
   # Format the date 
   mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% 
   # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
-  filter(!is.na(MELDT_SMITTESPORING)) %>%  
+  # filter(!is.na(MELDT_SMITTESPORING)) %>%  
   # Fjerne evt positive kontroller
   filter(str_detect(KEY, "pos", negate = TRUE)) %>%
   # Fjerne de som allerede er submittet til Gisaid. NB - husk å importere submisjonsresultater først.
   # Using the is.na() filter because there could be other strings than the EPI_ISL accession written
-  filter(is.na(GISAID_EPI_ISL)) %>% 
+  filter(GISAID_EPI_ISL == "") %>% 
+  #filter(is.na(GISAID_EPI_ISL)) %>% 
   # Get the various plates
   select(KEY, PROVE_TATT, SEKV_OPPSETT_SWIFT7) %>%
   # Select one sample per oppsett
