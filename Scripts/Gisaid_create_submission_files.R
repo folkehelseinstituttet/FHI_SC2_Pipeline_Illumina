@@ -207,7 +207,7 @@ filter_BN <- function(BN) {
     # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
     filter(!is.na(MELDT_SMITTESPORING)) %>%
     # Remove previously submitted samples
-    filter(is.na(GISAID_EPI_ISL)) %>%
+    filter(GISAID_EPI_ISL != "") %>% 
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Fjerne prøver som mangler Fylkenavn
