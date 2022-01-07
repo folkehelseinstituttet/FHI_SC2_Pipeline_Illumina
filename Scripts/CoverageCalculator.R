@@ -48,7 +48,7 @@ stopCluster(cluster.cores)
 
 results<-list.files(results,full.names = TRUE)
 
-primers<-read.csv("/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4/SARS-CoV-2.primer.bed",
+primers<-read.csv("/home/docker/Fastq/primers.bed",
                   sep = "\t", header = FALSE)
 
 #Temporal solution for alternative primers 21122021 Nacho
