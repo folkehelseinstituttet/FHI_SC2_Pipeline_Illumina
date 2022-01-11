@@ -5,10 +5,17 @@
 # Example run:
 # ./Gisaid_create_submission.sh
 
-# Change the "oppsett" below. E.g. "FHI200", or "681" for Run681
-declare -a array=("FHI258")
+# Change the "oppsett" below. E.g. "FHI200" (FHI NSC), or "681" (Artic Illumina Run681), Nr134A/Nano (Nanopore), MIK172 (MIK NSC)
+declare -a array=("FHI271a" "FHI274" "FHI275" "FHI276" "FHI277")
+
+# Illumina NSC (FHI): Swift_FHI
+# Illumina Artic: Illumina_Artic
+# Illumina MIK: Swift_MIK
+# Nanopore: Artic_Nanopore
 platform="Swift_FHI"
-submitter="jonbra"
+
+# Sett inn Gisaid brukernavn:
+submitter="hildenf"
 
 # loop through arguments
 #while getopts p:o:f:m:S: flag
