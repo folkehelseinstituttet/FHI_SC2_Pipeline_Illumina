@@ -238,7 +238,7 @@ filter_BN <- function(BN) {
       filter(!is.na(MELDT_SMITTESPORING)) %>%
       # Filtrer på coverage >= 94%
       filter(Dekning_Nano >=94) %>%
-      mutate(SEARCH_COLUMN = KEY) %>%
+      mutate(SEARCH_COLUMN = SEQUENCEID_NANO29) %>%
       rename("COVERAGE" = COVARAGE_DEPTH_NANO)
   } else if (platform == "Swift_FHI") {
     oppsett_details <- tmp %>%
@@ -328,9 +328,7 @@ find_sequences <- function(platform, oppsett) {
     # Pick our the relevant oppsett
     oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
     dir <- dirs_fhi[grep(paste0(oppsett), dirs_fhi)]
-    #NB! Denne må automatiseres - hvordan? EN if statement om hvis RAPID så... eller temp... eller copy
-    #dir <- dir[-grep("RAPID", dir)]
-
+    
     # List the files
     filepaths <- list.files(path = dir,
                             pattern = "consensus\\.fasta$",
