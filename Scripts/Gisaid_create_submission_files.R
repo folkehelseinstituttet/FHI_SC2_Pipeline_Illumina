@@ -229,7 +229,7 @@ filter_BN <- function(BN) {
       filter(!is.na(MELDT_SMITTESPORING)) %>%
       # Filtrer på coverage >= 94%
       filter(Dekning_Artic >=94) %>%
-      mutate(SEARCH_COLUMN = KEY) %>%
+      mutate(SEARCH_COLUMN = RES_CDC_INFB_CT) %>%
       rename("COVERAGE" = RES_CDC_INFA_RX)
   } else if (platform == "Artic_Nanopore") {
     oppsett_details <- tmp %>%
@@ -316,7 +316,8 @@ find_sequences <- function(platform, oppsett) {
                             recursive = TRUE)
 
     # Dropper det siste tallet.
-    samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
+    samples <- gsub("_.*", "", basename(filepaths))
+    #samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
   } else if (platform == "Artic_Nanopore") {
     # Search the N: disk for consensus sequences.
     try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE),
