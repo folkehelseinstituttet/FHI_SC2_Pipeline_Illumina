@@ -205,7 +205,8 @@ lookup_function <- function(metadata) {
 filter_BN <- function(BN) {
   tmp <- BN %>%
     # Remove previously submitted samples
-    filter(GISAID_EPI_ISL != "") %>%
+    filter(!is.na(GISAID_EPI_ISL)) %>% 
+    #filter(GISAID_EPI_ISL != "") %>%
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Fjerne prøver som mangler Fylkenavn
@@ -268,8 +269,12 @@ find_sequences <- function(platform, oppsett) {
   if (platform == "Swift_FHI"){
     # Search the N: disk for consensus sequences
     # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE)
-    dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/",
-                          recursive = FALSE)
+    # dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE), list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2022/", recursive = FALSE))
+
+    #dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/",
+    #                      recursive = FALSE)
+    dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE),
+                  list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2022/", recursive = FALSE))
 
     # Pick our the relevant oppsett
     dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
@@ -299,10 +304,14 @@ find_sequences <- function(platform, oppsett) {
     samples <- gsub("_.*","", gsub(".*/","", filepaths))
   } else if (platform == "Artic_Illumina") {
     # Search the N: disk for consensus sequences.
-    try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021",
-                              recursive = FALSE))
-    try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021",
-                          recursive = FALSE))
+    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE), 
+                      list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2022", recursive = FALSE)))
+    
+    # try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE))
+    # try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE))
+    try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE), 
+                      list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2022", recursive = FALSE)))
+    
     # Pick our the relevant oppsett
     dir <- dirs_fhi[grep(oppsett, dirs_fhi)]
 
@@ -316,10 +325,11 @@ find_sequences <- function(platform, oppsett) {
     samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
   } else if (platform == "Artic_Nanopore") {
     # Search the N: disk for consensus sequences.
-    try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
-                              recursive = FALSE))
-    try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021",
-                          recursive = FALSE))
+    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE),
+                      list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2022", recursive = FALSE)))
+    try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE),
+                      list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2022", recursive = FALSE)))
+    
     # Pick our the relevant oppsett
     oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
     dir <- dirs_fhi[grep(paste0(oppsett), dirs_fhi)]
