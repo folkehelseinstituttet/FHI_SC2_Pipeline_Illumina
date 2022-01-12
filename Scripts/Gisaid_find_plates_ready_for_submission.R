@@ -2,7 +2,8 @@
 pacman::p_load(tidyverse, readxl, stringr, lubridate)
 
 # Read data from BioNumerics ----------------------------------------------
-load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData")
+try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
+try(load(file = "N:/Virologi/JonBrate/Prosjekter/BN.RData"))
 # Les inn BN spørring. Husk å Refreshe og lagre den originale excel-fila først (N:/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx)
 #BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
 #  select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE,
