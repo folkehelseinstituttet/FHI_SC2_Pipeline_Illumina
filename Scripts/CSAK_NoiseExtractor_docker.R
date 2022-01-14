@@ -21,7 +21,7 @@ if(length(args)==0){
 
 results <-"/home/docker/Fastq/"   #Docker
 results<-list.dirs(results)
-results<-results[grep("summaries$",results)]
+results<-results[grep("bam$",results)] #Fix to make it work both for NSC and FHI
 results<-paste(results,"/",sep = "")
 
 common.folder <-"/home/docker/CommonFiles/"

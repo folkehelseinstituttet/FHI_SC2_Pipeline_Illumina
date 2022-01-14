@@ -9,7 +9,7 @@ if(paste(rownames(df),collapse = "")!=paste(c(1:nrow(df)), collapse="")){
   df<-df[,c(1:15)]
 }
 
-noise.file<-list.files(paste(starting.folder,"/results/2_bam/noiseextractor/",sep = ""), pattern = "ResultsNoisExtractor.*\\.xlsx", full.names = TRUE)
+noise.file<-list.files(paste(starting.folder,"results/2_bam/noiseextractor/",sep = ""), pattern = "ResultsNoisExtractor.*\\.xlsx", full.names = TRUE)
 
 df2<-read_xlsx(noise.file)
 df2<-df2[,c("Sample", "Class","Status")]
