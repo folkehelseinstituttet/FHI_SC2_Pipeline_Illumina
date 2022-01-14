@@ -36,8 +36,8 @@ fasta_filename <- opt$fasta
 #  rename("Dekning_Artic" = PROSENTDEKNING_GENOM,
 #         "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
 #         "Dekning_Nano" = DEKNING_NANOPORE))
-try(load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData"))
 try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
+try(load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData"))
 # BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>% select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7, SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE, SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>% rename("Dekning_Artic" = PROSENTDEKNING_GENOM, "Dekning_Swift" = COVERAGE_BREADTH_SWIFT, "Dekning_Nano" = DEKNING_NANOPORE)
 
 # Set parameters ----------------------------------------------------------
@@ -242,7 +242,7 @@ filter_BN <- function(BN) {
       rename("COVERAGE" = COVARAGE_DEPTH_NANO)
   } else if (platform == "Swift_FHI") {
     oppsett_details <- tmp %>%
-      filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>%
+      filter(str_detect(SEKV_OPPSETT_SWIFT7, oppsett)) %>% 
       # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
       filter(!is.na(MELDT_SMITTESPORING)) %>%
       # Filtrer på coverage >= 94%
@@ -252,13 +252,13 @@ filter_BN <- function(BN) {
       rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
   } else if (platform == "Swift_MIK") {
     oppsett_details <- tmp %>%
-      filter(SEKV_OPPSETT_SWIFT7 == oppsett) %>%
+      filter(str_detect(SEKV_OPPSETT_SWIFT7, oppsett)) %>% 
       # Filtrer på coverage >= 94%
       filter(Dekning_Swift >=94) %>%
       # Remove "OUS-" from Sequence ID
       mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>%
       # Create column for looping through later
-      mutate(SEARCH_COLUMN = SEQUENCE_ID_TRIMMED) %>%
+      mutate(SEARCH_COLUMN = SEQUENCEID_SWIFT) %>%
       rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
   }
     return(oppsett_details)
@@ -287,8 +287,7 @@ find_sequences <- function(platform, oppsett) {
   } else if (platform == "Swift_MIK") {
     # Search the N: disk for consensus sequences.
     try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE))
-    try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK",
-                          recursive = FALSE))
+    try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE))
     # Pick our the relevant oppsett
     dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
 
