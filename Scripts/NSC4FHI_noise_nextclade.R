@@ -6,7 +6,7 @@ if(paste(rownames(df),collapse = "")!=paste(c(1:nrow(df)), collapse="")){
   df<-cbind(rownames(df), df)
   rownames(df)<-NULL
   colnames(df)<-colnames(df)[-1]
-  df<-df[,c(1:15)]
+  df<-df[,-ncol(df)]
 }
 
 noise.file<-list.files(paste(starting.folder,"results/2_bam/noiseextractor/",sep = ""), pattern = "ResultsNoisExtractor.*\\.xlsx", full.names = TRUE)
