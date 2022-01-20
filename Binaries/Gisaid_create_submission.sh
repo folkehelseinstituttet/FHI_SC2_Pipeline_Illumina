@@ -51,12 +51,3 @@ declare -a array=(*.csv)
 head -1 "${array[0]}" > ${now}.csv
 for oppsett in "${array[@]}"; do grep -v "^covv" "${oppsett}" >> ${now}.csv; done
 for oppsett in "${array[@]}"; do cat "${oppsett%csv}fasta" >> ${now}.fasta; done
-
-# Perform some simple sanity checks
-echo "Antall fastasekvenser"
-grep -c "^>" ${now}.fasta
-
-echo "Antall prøver i metadatafilen"
-grep -v "covv" | wc -l
-
-echo "Er disse to tallene like?"
