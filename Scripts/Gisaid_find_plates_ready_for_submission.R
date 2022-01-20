@@ -28,7 +28,7 @@ BN %>%
   group_by(SEKV_OPPSETT_SWIFT7) %>%
   slice_head(n = 1) %>%
   # Sort by date
-  arrange(desc(PROVE_TATT)) %>% View("FHI")
+  arrange(desc(PROVE_TATT)) %>% View("Swift_FHI")
 
 # Check Artic Illumina
 BN %>%
@@ -51,7 +51,7 @@ BN %>%
   group_by(SAMPLE_CATEGORY) %>%
   slice_head(n = 1) %>%
   # Sort by date
-  arrange(desc(PROVE_TATT)) %>% View("Artic_Ill")
+  arrange(desc(PROVE_TATT)) %>% View("Artic_Illumina")
 
 # Check Nanopore
 BN %>%
@@ -73,7 +73,7 @@ BN %>%
   group_by(SEKV_OPPSETT_NANOPORE) %>%
   slice_head(n = 1) %>%
   # Sort by date
-  arrange(desc(PROVE_TATT)) %>% View("Nano")
+  arrange(desc(PROVE_TATT)) %>% View("Artic_Nanopore")
 
 # Check MIK
 BN %>%
@@ -96,4 +96,4 @@ BN %>%
   group_by(SEKV_OPPSETT_SWIFT7) %>%
   slice_head(n = 1) %>%
   # Sort by date
-  arrange(desc(PROVE_TATT)) %>% View("MIK")
+  arrange(desc(PROVE_TATT)) %>% View("Swift_MIK")
