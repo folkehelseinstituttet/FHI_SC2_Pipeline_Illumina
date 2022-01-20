@@ -206,7 +206,7 @@ filter_BN <- function(BN) {
   tmp <- BN %>%
     # Remove previously submitted samples
     filter(!is.na(GISAID_EPI_ISL)) %>% 
-    #filter(GISAID_EPI_ISL != "") %>%
+    filter(GISAID_EPI_ISL == "") %>%
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Fjerne prøver som mangler Fylkenavn
