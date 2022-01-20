@@ -372,11 +372,12 @@ find_sequences <- function(platform, oppsett) {
       mutate(tmp = str_remove(seq.name, "Artic")) %>%
       mutate(KEY = str_sub(tmp, start = 1, end = -2))
   } else if (platform == "Artic_Nanopore") {
-    # Fix names to match KEY
+    # Fix names to match SEQUENCEID_NANO29
     fastas <- fastas %>%
+      separate("seq.name", into = c("SEQUENCEID_NANO29", NA, NA), sep = "/", remove = F)
       # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
-      mutate(tmp = gsub("_.*", "", seq.name)) %>%
-      mutate(KEY = str_sub(tmp, start = 1, end = -2))
+     # mutate(tmp = gsub("_.*", "", seq.name)) %>%
+     # mutate(KEY = str_sub(tmp, start = 1, end = -2))
   }
 
   # Sett Virus name som fasta header
@@ -440,11 +441,14 @@ find_sequences <- function(platform, oppsett) {
              seq.text)
 
   } else if (platform == "Artic_Nanopore") {
-    KEY_virus_mapping <- oppsett_details %>%
+    SEQUENCEID_virus_mapping <- oppsett_details %>%
+      # Trenger også å lage Virus name
       # Lage kolonne for "year"
       separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
       mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+      # Fjerne ledende nuller fra stammenavnet
+      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>% 
       # Legge til kolonner med fast informasjon for å lage "Virus name" senere
       add_column("Separator" = "/",
                  "GISAID_prefix" = "hCoV-19/",
@@ -452,9 +456,9 @@ find_sequences <- function(platform, oppsett) {
                  "Continent" = "Europe/") %>%
       # Make "Virus name" column
       unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-      select(KEY, covv_virus_name)
+      select(KEY, SEQUENCEID_NANO29, covv_virus_name)
 
-    fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
+    fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "SEQUENCEID_NANO29") %>%
       select(`seq.name` = covv_virus_name,
              seq.text)
   }
@@ -476,7 +480,9 @@ create_metadata <- function(oppsett_details) {
   } else {
     metadata <- metadata %>%
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1))
+      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>% 
+      # Fjerne ledende nuller fra stammenavnet
+      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+"))
   }
 
     metadata <- metadata %>%
