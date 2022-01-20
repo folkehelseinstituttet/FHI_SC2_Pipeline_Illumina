@@ -9,7 +9,7 @@
 declare -a array=("FHI271a" "FHI274" "FHI275" "FHI276" "FHI277")
 
 # Illumina NSC (FHI): Swift_FHI
-# Illumina Artic: Illumina_Artic
+# Illumina Artic: Artic_Illumina
 # Illumina MIK: Swift_MIK
 # Nanopore: Artic_Nanopore
 platform="Swift_FHI"
