@@ -66,6 +66,6 @@ for oppsett in "${array[@]}"; do grep -v "^covv" "${oppsett}" >> ${now}.csv; don
 for oppsett in "${array[@]}"; do cat "${oppsett%csv}fasta" >> ${now}.fasta; done
 
 # Move the submission files to N
-mv *.{csv,fasta,xlsx} /mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/${subm_dir}
+# mv *.{csv,fasta,xlsx} /mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/${subm_dir}
 # Move a copy of the submission script for reference
-mv ~/.fhiscripts/FHI_SC2_Pipeline_Illumina/*.sh /mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/${subm_dir}
+# mv ~/.fhiscripts/FHI_SC2_Pipeline_Illumina/*.sh /mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/${subm_dir}
