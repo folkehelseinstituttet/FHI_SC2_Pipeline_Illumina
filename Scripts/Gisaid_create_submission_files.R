@@ -220,7 +220,9 @@ filter_BN <- function(BN) {
     # Endre Sør
     mutate("FYLKENAVN" = str_replace(FYLKENAVN, "S\xf8r", "Sor")) %>%
     # Fix date format
-    mutate("PROVE_TATT" = ymd(PROVE_TATT))
+    mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% 
+    # Drop samples witout collection date
+    filter(!is.na(PROVE_TATT))
 
     if (platform == "Artic_Illumina") {
     oppsett_details <- tmp %>%
@@ -355,10 +357,12 @@ find_sequences <- function(platform, oppsett) {
 
   # Fix names to match KEY
   if (platform == "Swift_FHI") {
+    # Fix names to match SEQUENCEID_SWIFT
     fastas <- fastas %>%
-      mutate(tmp = str_remove(seq.name, "_ivar_masked")) %>%
-      mutate(tmp = str_remove(tmp, "B$")) %>%
-      mutate(KEY = str_remove(tmp, "SWIFT"))
+      mutate(SEQUENCEID_SWIFT = str_remove(seq.name, "_ivar_masked"))
+      #mutate(tmp = str_remove(seq.name, "_ivar_masked")) %>%
+      #mutate(tmp = str_remove(tmp, "B$")) %>%
+      #mutate(KEY = str_remove(tmp, "SWIFT"))
   } else if (platform == "Swift_MIK") {
     # Fix names to match SEQUENCEID_SWIFT
     fastas <- fastas %>%
@@ -366,27 +370,28 @@ find_sequences <- function(platform, oppsett) {
       # Some of the MIK-samples have a leading number in front of OUS
       mutate(SEQUENCE_ID_TRIMMED = gsub(".*OUS-", "", .$tmp))
   } else if (platform == "Artic_Illumina") {
-    # Fix names to match KEY
     fastas <- fastas %>%
-      mutate(tmp = str_remove(seq.name, "Artic")) %>%
-      mutate(KEY = str_sub(tmp, start = 1, end = -2))
+      rename("RES_CDC_INFB_CT" = `seq.name`)
+      #mutate(tmp = str_remove(seq.name, "Artic")) %>%
+      #mutate(KEY = str_sub(tmp, start = 1, end = -2))
   } else if (platform == "Artic_Nanopore") {
     # Fix names to match SEQUENCEID_NANO29
     fastas <- fastas %>%
       separate("seq.name", into = c("SEQUENCEID_NANO29", NA, NA), sep = "/", remove = F)
-      # Legger inn denne først for da kan jeg senere slice stringen fra første til nest siste karakter. Mer robust
-     # mutate(tmp = gsub("_.*", "", seq.name)) %>%
-     # mutate(KEY = str_sub(tmp, start = 1, end = -2))
+
   }
 
   # Sett Virus name som fasta header
   # Først lage en mapping mellom KEY og virus name
   if (platform == "Swift_FHI") {
-    KEY_virus_mapping <- oppsett_details %>%
+    SEQUENCEID_virus_mapping <- oppsett_details %>%
+      # Trenger også å lage Virus name
       # Lage kolonne for "year"
       separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
       mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+      # Fjerne ledende nuller fra stammenavnet
+      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>% 
       # Legge til kolonner med fast informasjon for å lage "Virus name" senere
       add_column("Separator" = "/",
                  "GISAID_prefix" = "hCoV-19/",
@@ -394,12 +399,12 @@ find_sequences <- function(platform, oppsett) {
                  "Continent" = "Europe/") %>%
       # Make "Virus name" column
       unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-      select(KEY, covv_virus_name)
-
-
-    fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
-      select(covv_virus_name, seq.text) %>%
-      rename(`seq.name` = covv_virus_name)
+      select(KEY, SEQUENCEID_SWIFT, covv_virus_name)
+    
+    fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "SEQUENCEID_SWIFT") %>%
+      select(`seq.name` = covv_virus_name,
+             seq.text)
+    
   } else if (platform == "Swift_MIK") {
     KEY_virus_mapping <- oppsett_details %>%
       # Lage kolonne for "year"
@@ -420,11 +425,14 @@ find_sequences <- function(platform, oppsett) {
       select(`seq.name` = covv_virus_name,
              seq.text)
   } else if (platform == "Artic_Illumina") {
-    KEY_virus_mapping <- oppsett_details %>%
+    SEQUENCEID_virus_mapping <- oppsett_details %>%
+      # Trenger også å lage Virus name
       # Lage kolonne for "year"
       separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
       mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+      # Fjerne ledende nuller fra stammenavnet
+      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>% 
       # Legge til kolonner med fast informasjon for å lage "Virus name" senere
       add_column("Separator" = "/",
                  "GISAID_prefix" = "hCoV-19/",
@@ -432,10 +440,9 @@ find_sequences <- function(platform, oppsett) {
                  "Continent" = "Europe/") %>%
       # Make "Virus name" column
       unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-      select(KEY, covv_virus_name)
-
-
-    fastas <- left_join(fastas, KEY_virus_mapping, by = "KEY") %>%
+      select(KEY, RES_CDC_INFB_CT, covv_virus_name)
+    
+    fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "RES_CDC_INFB_CT") %>%
       select(`seq.name` = covv_virus_name,
              seq.text)
 
@@ -474,7 +481,7 @@ create_metadata <- function(oppsett_details) {
 
   if (platform == "Swift_MIK") {
     metadata <- metadata %>%
-      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+      # For OUS bruke hele KEY som stammenr
       mutate("Uniq_nr" = str_sub(KEY, start = 1, end = -1))
   } else {
     metadata <- metadata %>%
