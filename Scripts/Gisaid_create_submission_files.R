@@ -282,7 +282,6 @@ find_sequences <- function(platform, oppsett) {
                             full.names = TRUE,
                             recursive = TRUE)
     samples <- gsub("_.*", "", basename(filepaths))
-    #samples <- str_sub(gsub("SWIFT", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -1)
 
   } else if (platform == "Swift_MIK") {
     # Search the N: disk for consensus sequences.
