@@ -646,7 +646,7 @@ if (platform == "Swift_FHI"){
   ass_method <- "Assembly by reference based mapping using Bowtie2 with iVar majority rules consensus"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
-  authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
+  authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Hilde Nordby Falkenhaug, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
 
   #### Trekke ut prøver ####
   oppsett_details <- filter_BN(BN)
@@ -673,7 +673,7 @@ if (platform == "Swift_FHI"){
   ass_method <- "Assembly by reference based mapping using Bowtie2 with iVar majority rules consensus"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
-  authors <- "Mona Holberg-Petersen, Lise Andresen, Cathrine Fladeby, Mariann Nilsen, Teodora Plamenova Ribarska, Pål Marius Bjørnstad, Gregor D. Gilfillan, Arvind Yegambaram Meenakshi Sundaram,Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Pedersen Benedikte Nevjen, Line Victoria Moen, Rasmus Riis Kopperud, Hilde Vollan, Olav Hungnes, Karoline Bragstad"
+  authors <- "Mona Holberg-Petersen, Lise Andresen, Cathrine Fladeby, Mariann Nilsen, Teodora Plamenova Ribarska, Pål Marius Bjørnstad, Gregor D. Gilfillan, Arvind Yegambaram Meenakshi Sundaram, Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Pedersen Benedikte Nevjen, Line Victoria Moen, Rasmus Riis Kopperud, Hilde Vollan, Olav Hungnes, Karoline Bragstad"
   orig_lab <- "Oslo University Hospital, Department of Microbiology"
   orig_adr <- "P.O.Box 4956 Nydalen, N-0424 Oslo, Norway"
 
@@ -702,7 +702,7 @@ if (platform == "Swift_FHI"){
   ass_method <- "Assembly by reference based mapping using Tanoti with iVar majority rules consensus"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
-  authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
+  authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Hilde Nordby Falkenhaug, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
 
   ##### Trekke ut prøver ####
   oppsett_details <- filter_BN(BN)
@@ -729,7 +729,7 @@ if (platform == "Swift_FHI"){
   ass_method <- "Assembly by reference based mapping using the Artic Nanopore protocol with medaka"
   sub_lab <- "Norwegian Institute of Public Health, Department of Virology"
   address <- "P.O.Box 222 Skoyen, 0213 Oslo, Norway"
-  authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
+  authors <- "Kathrine Stene-Johansen, Kamilla Heddeland Instefjord, Hilde Elshaug, Garcia Llorente Ignacio, Jon Bråte, Engebretsen Serina Beate, Pedersen Benedikte Nevjen, Line Victoria Moen, Hilde Nordby Falkenhaug, Debech Nadia, Atiya R Ali, Marie Paulsen Madsen, Rasmus Riis Kopperud, Hilde Vollan, Karoline Bragstad, Olav Hungnes"
 
   ##### Trekke ut prøver ####
   oppsett_details <- filter_BN(BN)
