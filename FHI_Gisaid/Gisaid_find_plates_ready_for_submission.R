@@ -1,8 +1,13 @@
+#############################################
+## Maintaned by Jon Bråte - jon.brate@fhi.no
+## This script checks which SARS-CoV-2 samples at NIPH have not been submitted to Gisaid.
+#############################################
+
 # Load packages
 pacman::p_load(tidyverse, readxl, stringr, lubridate)
 
 # Read data from BioNumerics ----------------------------------------------
-# NB: Husk å kjøre scriptet refresh_data_from_BN.R først 
+# NB: Husk å kjøre scriptet refresh_data_from_BN.R først
 try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
 try(load(file = "N:/Virologi/JonBrate/Prosjekter/BN.RData"))
 
