@@ -44,6 +44,7 @@ submitter="jonbra"
 #echo "Username submitter: $submitter";
 
 # Get the latest updates
+cd ~/.fhiscripts/FHI_SC2_Pipeline_Illumina
 git pull origin master
 docker build -t garcianacho/fhisc2:Illumina .
 
