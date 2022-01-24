@@ -31,26 +31,10 @@ if (is.null(opt$platform)){
   print_help(opt_parser)
   stop("At least one argument must be supplied", call.=FALSE)
 }
+
+# Set parameters and fixed information ------------------------------------
 fasta_filename <- opt$fasta
-# Read data from BioNumerics ----------------------------------------------
-# Les inn BN spørring. Husk å Refreshe og lagre den originale excel-fila først (N:/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx)
-#BN <- suppressWarnings(read_excel("/home/docker/N/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>%
-#  select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7,
-#         SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE,
-#         SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>%
-#  rename("Dekning_Artic" = PROSENTDEKNING_GENOM,
-#         "Dekning_Swift" = COVERAGE_BREADTH_SWIFT,
-#         "Dekning_Nano" = DEKNING_NANOPORE))
-try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
-try(load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData"))
-# BN <- read_excel("/mnt/N/Virologi/Influensa/2021/Spørringsfiler BN/SQLSERVER_TestBN_Spørring_Entrytable.xlsx", sheet = "Sporring BN") %>% select(KEY, REKVNR, PROVE_TATT, FYLKENAVN, MATERIALE, PROSENTDEKNING_GENOM, DEKNING_NANOPORE, SEKV_OPPSETT_NANOPORE, DEKNING_NANOPORE, SEKV_OPPSETT_SWIFT7, SEQUENCEID_NANO29, SEQUENCEID_SWIFT, COVERAGE_BREADTH_SWIFT, GISAID_PLATFORM, GISAID_EPI_ISL, GENOTYPE_SVART_I_LABWARE, COVERAGE_BREATH_EKSTERNE, SAMPLE_CATEGORY, INNSENDER, COVERAGE_DEPTH_SWIFT, COVARAGE_DEPTH_NANO, RES_CDC_INFA_RX, RES_CDC_INFB_CT, MELDT_SMITTESPORING) %>% rename("Dekning_Artic" = PROSENTDEKNING_GENOM, "Dekning_Swift" = COVERAGE_BREADTH_SWIFT, "Dekning_Nano" = DEKNING_NANOPORE)
-
-# Set parameters ----------------------------------------------------------
-
-# Set platform
 platform <- opt$platform
-
-# Plate / oppsett
 oppsett <- opt$oppsett
 
 # Add fixed columns for metadata
@@ -70,10 +54,11 @@ covv_last_vaccinated <- "Unknown"
 covv_treatment <- "Unknown"
 orig_lab <- NA
 orig_adr <- NA
-
-# Add specimen
 specimen <- opt$specimen
 
+# Read data from BioNumerics ----------------------------------------------
+try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
+try(load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData"))
 
 # Set originating labs and adresses ---------------------------------------
 lab_lookup_table <- tribble(
@@ -109,6 +94,9 @@ lab_lookup_table <- tribble(
 ) %>%
   mutate(`Lab code` = as.character(`Lab code`))
 
+#############################################
+## Define functions
+#############################################
 
 # Define lookup function to decide originating lab and andress ------------
 lookup_function <- function(metadata) {
@@ -201,10 +189,6 @@ lookup_function <- function(metadata) {
   }
   return(metadata)
 }
-
-
-
-
 
 # Define filter function --------------------------------------------------
 filter_BN <- function(BN) {
@@ -572,6 +556,7 @@ create_metadata <- function(oppsett_details) {
   }
   return(metadata)
 }
+
 # Define Frameshift function ----------------------------------------------
 FS <- function(fastas){
   #### Run Frameshift analysis ####
@@ -640,6 +625,10 @@ clean_up_and_write <- function(fastas_clean, metadata_clean) {
     dat2fasta(fastas_clean, outfile = fasta_filename)
   }
 }
+
+#############################################
+## Start script
+#############################################
 
 # Start script ------------------------------------------------------------
 
