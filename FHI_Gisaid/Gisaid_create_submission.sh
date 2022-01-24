@@ -10,17 +10,17 @@
 subm_dir="2022-00-00_test"
 
 # Change the "oppsett" below. E.g. "FHI200" for Swift_FHI, or "681" for Artic_Illumina Run681, Nr134A/Nano for Artic_Nanopore, or MIK172 for Swift_MIK
-declare -a array=("FHI275" "FHI276" "FHI277")
+declare -a array=("MIK311" "MIK312" "MIK314")
 
 # Change the platform type. Allowed values:
 # Illumina NSC (FHI): Swift_FHI
 # Illumina Artic: Artic_Illumina
 # Illumina MIK: Swift_MIK
 # Nanopore: Artic_Nanopore
-platform="Swift_FHI"
+platform="Swift_MIK"
 
 # Sett inn Gisaid brukernavn:
-submitter="username"
+submitter="jonbra"
 
 # loop through arguments
 #while getopts p:o:f:m:S: flag
