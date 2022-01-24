@@ -61,7 +61,7 @@ for oppsett in "${array[@]}"; do \
   -v /mnt/N/Virologi/:/home/docker/N \
   -v $(pwd):/home/docker/Fastq \
   garcianacho/fhisc2:Illumina \
-  Rscript --vanilla /home/docker/Scripts/Gisaid_create_submission_files.R -p ${platform} -o "${oppsett}" -f "${oppsett}.fasta" -m "${oppsett}.csv" -S ${submitter}; done
+  Rscript --vanilla /home/docker/FHI_Gisaid/Gisaid_create_submission_files.R -p ${platform} -o "${oppsett}" -f "${oppsett}.fasta" -m "${oppsett}.csv" -S ${submitter}; done
 
 # Merge the files for each oppsett
 now=`date +"%Y-%m-%d"`
