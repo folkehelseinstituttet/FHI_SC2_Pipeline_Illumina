@@ -1,5 +1,10 @@
 #!/usr/bin/env Rscript
 
+#############################################
+## Maintaned by Jon Bråte - jon.brate@fhi.no
+## This script creates Gisaid submission files for SARS-CoV-2 samples stored at NIPH servers.
+#############################################
+
 # Load packages
 pacman::p_load(optparse, phylotools, tidyverse, readxl, stringr, lubridate)
 
@@ -205,7 +210,7 @@ lookup_function <- function(metadata) {
 filter_BN <- function(BN) {
   tmp <- BN %>%
     # Remove previously submitted samples
-    filter(!is.na(GISAID_EPI_ISL)) %>% 
+    filter(!is.na(GISAID_EPI_ISL)) %>%
     filter(GISAID_EPI_ISL == "") %>%
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
@@ -220,7 +225,7 @@ filter_BN <- function(BN) {
     # Endre Sør
     mutate("FYLKENAVN" = str_replace(FYLKENAVN, "S\xf8r", "Sor")) %>%
     # Fix date format
-    mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>% 
+    mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>%
     # Drop samples witout collection date
     filter(!is.na(PROVE_TATT))
 
@@ -244,7 +249,7 @@ filter_BN <- function(BN) {
       rename("COVERAGE" = COVARAGE_DEPTH_NANO)
   } else if (platform == "Swift_FHI") {
     oppsett_details <- tmp %>%
-      filter(str_detect(SEKV_OPPSETT_SWIFT7, oppsett)) %>% 
+      filter(str_detect(SEKV_OPPSETT_SWIFT7, oppsett)) %>%
       # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
       filter(!is.na(MELDT_SMITTESPORING)) %>%
       # Filtrer på coverage >= 94%
@@ -254,7 +259,7 @@ filter_BN <- function(BN) {
       rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
   } else if (platform == "Swift_MIK") {
     oppsett_details <- tmp %>%
-      filter(str_detect(SEKV_OPPSETT_SWIFT7, oppsett)) %>% 
+      filter(str_detect(SEKV_OPPSETT_SWIFT7, oppsett)) %>%
       # Filtrer på coverage >= 94%
       filter(Dekning_Swift >=94) %>%
       # Remove "OUS-" from Sequence ID
@@ -270,7 +275,7 @@ filter_BN <- function(BN) {
 find_sequences <- function(platform, oppsett) {
   if (platform == "Swift_FHI"){
     # Search the N: disk for consensus sequences
-    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE), 
+    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE),
                       list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2022/", recursive = FALSE)))
     try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE),
                       list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2022/", recursive = FALSE)))
@@ -301,11 +306,11 @@ find_sequences <- function(platform, oppsett) {
     samples <- gsub("_.*","", gsub(".*/","", filepaths))
   } else if (platform == "Artic_Illumina") {
     # Search the N: disk for consensus sequences.
-    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE), 
+    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE),
                       list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2022", recursive = FALSE)))
-    try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE), 
+    try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE),
                       list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2022", recursive = FALSE)))
-    
+
     # Pick our the relevant oppsett
     dir <- dirs_fhi[grep(oppsett, dirs_fhi)]
 
@@ -324,11 +329,11 @@ find_sequences <- function(platform, oppsett) {
                       list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2022", recursive = FALSE)))
     try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE),
                       list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2022", recursive = FALSE)))
-    
+
     # Pick our the relevant oppsett
     oppsett <- gsub("Nr", "", (gsub("/Nano", "", oppsett)))
     dir <- dirs_fhi[grep(paste0(oppsett), dirs_fhi)]
-    
+
     # List the files
     filepaths <- list.files(path = dir,
                             pattern = "consensus\\.fasta$",
@@ -391,7 +396,7 @@ find_sequences <- function(platform, oppsett) {
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
       mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
       # Fjerne ledende nuller fra stammenavnet
-      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>% 
+      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
       # Legge til kolonner med fast informasjon for å lage "Virus name" senere
       add_column("Separator" = "/",
                  "GISAID_prefix" = "hCoV-19/",
@@ -400,11 +405,11 @@ find_sequences <- function(platform, oppsett) {
       # Make "Virus name" column
       unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
       select(KEY, SEQUENCEID_SWIFT, covv_virus_name)
-    
+
     fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "SEQUENCEID_SWIFT") %>%
       select(`seq.name` = covv_virus_name,
              seq.text)
-    
+
   } else if (platform == "Swift_MIK") {
     KEY_virus_mapping <- oppsett_details %>%
       # Lage kolonne for "year"
@@ -432,7 +437,7 @@ find_sequences <- function(platform, oppsett) {
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
       mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
       # Fjerne ledende nuller fra stammenavnet
-      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>% 
+      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
       # Legge til kolonner med fast informasjon for å lage "Virus name" senere
       add_column("Separator" = "/",
                  "GISAID_prefix" = "hCoV-19/",
@@ -441,7 +446,7 @@ find_sequences <- function(platform, oppsett) {
       # Make "Virus name" column
       unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
       select(KEY, RES_CDC_INFB_CT, covv_virus_name)
-    
+
     fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "RES_CDC_INFB_CT") %>%
       select(`seq.name` = covv_virus_name,
              seq.text)
@@ -454,7 +459,7 @@ find_sequences <- function(platform, oppsett) {
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
       mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
       # Fjerne ledende nuller fra stammenavnet
-      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>% 
+      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
       # Legge til kolonner med fast informasjon for å lage "Virus name" senere
       add_column("Separator" = "/",
                  "GISAID_prefix" = "hCoV-19/",
@@ -486,7 +491,7 @@ create_metadata <- function(oppsett_details) {
   } else {
     metadata <- metadata %>%
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>% 
+      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
       # Fjerne ledende nuller fra stammenavnet
       mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+"))
   }
