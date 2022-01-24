@@ -41,10 +41,16 @@ cd /home/docker/Fastq
 
 if [ ${1} == "ArticV3" ]; then
 cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3.2/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed
+STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3.2/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed"
+primer_version="${STR:65:4}"
+
 fi
 
 if [ ${1} == "ArticV4" ]; then
 cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4.1/SARS-CoV-2.primer.bed /home/docker/Fastq/primers.bed
+STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4.1/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed"
+primer_version="${STR:65:4}"
+
 fi
 
 
@@ -272,7 +278,7 @@ echo "Percent_covered:, n.a. " >> ${dir%/}_summary.csv
 echo "Average_depth:, ${wee1115}" >> ${dir%/}_summary.csv
 echo "Percent_covered_above_depth=9:, ${coverage_breath}" >> ${dir%/}_summary.csv
 echo "Percent_covered_above_depth=29:, n.a. " >> ${dir%/}_summary.csv
-echo "Script_name:, ${script_name1}" >> ${dir%/}_summary.csv
+echo "Script_name:, ${script_name1}/${primer_version}" >> ${dir%/}_summary.csv
 
     cd "${basedir}"
 done
