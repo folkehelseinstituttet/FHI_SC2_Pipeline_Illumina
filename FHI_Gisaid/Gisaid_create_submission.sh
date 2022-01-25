@@ -9,7 +9,11 @@
 # Example: subm_dir="2022-01-20_FHI_batch"
 # subm_dir="2022-00-00_test"
 
-# Change the "oppsett" below. E.g. "FHI200" for Swift_FHI, or "681" for Artic_Illumina Run681, Nr134A/Nano for Artic_Nanopore, or MIK172 for Swift_MIK
+# Change the "oppsett" below. 
+# E.g. "FHI200" for Swift_FHI, 
+# or "681" for Artic_Illumina Run681, 
+# Nr134A/Nano for Artic_Nanopore, 
+# or MIK172 for Swift_MIK
 declare -a array=("MIK311" "MIK312" "MIK314")
 
 # Change the platform type. Allowed values:
@@ -40,6 +44,7 @@ submitter="jonbra"
 #echo "Username submitter: $submitter";
 
 # Get the latest updates
+cd ~/.fhiscripts/FHI_SC2_Pipeline_Illumina
 git pull origin master
 docker build -t garcianacho/fhisc2:Illumina .
 
@@ -56,7 +61,7 @@ for oppsett in "${array[@]}"; do \
   -v /mnt/N/Virologi/:/home/docker/N \
   -v $(pwd):/home/docker/Fastq \
   garcianacho/fhisc2:Illumina \
-  Rscript --vanilla /home/docker/Scripts/Gisaid_create_submission_files.R -p ${platform} -o "${oppsett}" -f "${oppsett}.fasta" -m "${oppsett}.csv" -S ${submitter}; done
+  Rscript --vanilla /home/docker/FHI_Gisaid/Gisaid_create_submission_files.R -p ${platform} -o "${oppsett}" -f "${oppsett}.fasta" -m "${oppsett}.csv" -S ${submitter}; done
 
 # Merge the files for each oppsett
 now=`date +"%Y-%m-%d"`
