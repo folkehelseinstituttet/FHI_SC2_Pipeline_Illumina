@@ -76,6 +76,8 @@ fastas_final <- tibble(
 # Read data from BioNumerics ----------------------------------------------
 try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
 try(load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData"))
+# Convert empty strings to NA
+BN <- BN %>% mutate_all(list(~na_if(.,"")))
 
 # Set originating labs and adresses ---------------------------------------
 lab_lookup_table <- tribble(
@@ -212,7 +214,6 @@ filter_BN <- function(BN) {
   tmp <- BN %>%
     # Remove previously submitted samples
     filter(!is.na(GISAID_EPI_ISL)) %>%
-    filter(GISAID_EPI_ISL == "") %>%
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
     # Fjerne prøver som mangler Fylkenavn
