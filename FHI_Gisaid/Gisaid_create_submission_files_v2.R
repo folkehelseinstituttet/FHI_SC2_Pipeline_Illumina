@@ -216,10 +216,6 @@ filter_BN <- function(BN) {
     filter(is.na(GISAID_EPI_ISL)) %>% 
     # Fjerne evt positiv controll
     filter(str_detect(KEY, "pos", negate = TRUE)) %>%
-    # Fjerne prøver som mangler Fylkenavn
-    filter(!is.na(FYLKENAVN)) %>%
-    # Det kan også stå "Ukjent" som Fylkenavn - ta bort
-    filter(str_detect(FYLKENAVN, "kjent", negate = TRUE)) %>%
     # Endre Trøndelag til Trondelag
     mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Tr\xf8ndelag", "Trondelag")) %>%
     # Endre Møre og Romsdal
@@ -271,13 +267,22 @@ filter_BN <- function(BN) {
       rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
   }
   
-  # Check for empty orig lab
-  for (i in seq_along(oppsett_details$INNSENDER)){
-    if (is.na(oppsett_details$INNSENDER[i])){
-      log_object <- log_object %>% 
-        add_row("oppsett" = oppsett_details$KEY[i],
-                "comment" = "had no Innsender info in BN - removed from submission")
-      oppsett_details <- oppsett_details[-i,]
+  # Check for empty orig lab and Fylke
+  if (sample_sheet$platform[i] != "Swift_MIK"){
+    for (i in seq_along(oppsett_details$INNSENDER)){
+      if (is.na(oppsett_details$INNSENDER[i])){
+        # Check INNSENDER
+        log_object <- log_object %>% 
+          add_row("oppsett" = oppsett_details$KEY[i],
+                  "comment" = "had no Innsender info in BN - removed from submission")
+        oppsett_details <- oppsett_details[-i,]
+      }else if (is.na(oppsett_details$FYLKENAVN[i])){
+        # Check Fylkeavn
+        log_object <- log_object %>% 
+          add_row("oppsett" = oppsett_details$KEY[i],
+                  "comment" = "had no Fylkenavn info in BN - removed from submission")
+        oppsett_details <- oppsett_details[-i,]
+      }
     }
   }
 
