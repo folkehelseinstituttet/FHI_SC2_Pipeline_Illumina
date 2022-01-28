@@ -30,7 +30,7 @@ covv_provider_sample_id <- "Unknown"
 covv_last_vaccinated <- "Unknown"
 covv_treatment <- "Unknown"
 specimen <- "Unknown"
-
+covv_sampling_strategy <- "Unknown"
 
 # Create empty objects to populate ----------------------------------------
 log_object <- tibble(
@@ -534,7 +534,8 @@ create_metadata <- function(oppsett_details) {
                  "covv_add_location" = covv_add_location,
                  "covv_provider_sample_id" = covv_provider_sample_id,
                  "covv_last_vaccinated" = covv_last_vaccinated,
-                 "covv_treatment" = covv_treatment) %>%
+                 "covv_treatment" = covv_treatment,
+                 "covv_sampling_strategy" = covv_sampling_strategy) %>%
       # Beholde endelige kolonner og rekkefølge
       select("submitter",
              "fn",
@@ -563,7 +564,8 @@ create_metadata <- function(oppsett_details) {
              "covv_last_vaccinated",
              "covv_treatment",
              "covv_coverage" = COVERAGE,
-             "INNSENDER")
+             "INNSENDER",
+             "covv_sampling_strategy")
 
   if (sample_sheet$platform[i] == "Swift_MIK") {
     # Remove column INNSENDER
