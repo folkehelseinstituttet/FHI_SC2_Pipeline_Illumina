@@ -2,7 +2,7 @@
 
 # Wrapper script for running "Gisaid_create_submission_files.R"
 # Example run (while in .fhiscripts folder):
-# ./Gisaid_create_submission_v2.sh -f "2022-01-26-test/Gisaid_sample_sheet.xlsx"
+# /home/ngs4/.fhiscripts/Gisaid_create_submission_v2.sh -f "2022-01-26-test/Gisaid_sample_sheet.xlsx"
 # "2022-01-26-test" refers to the submission directory on the N drive
 
 # loop through arguments
