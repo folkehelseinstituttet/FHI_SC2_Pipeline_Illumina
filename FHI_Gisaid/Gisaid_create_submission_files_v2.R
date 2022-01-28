@@ -635,6 +635,27 @@ remove_FS_metadata <- function(metadata){
 }
 
 
+
+# Define check for empty or NA function -----------------------------------
+check_final_metadata <- function(metadata_clean) {
+  # If empty metadata
+  if (nrow(metadata_clean) == 0) {
+    log_object <- log_object %>% 
+      add_row("oppsett" = sample_sheet$oppsett[i],
+              "comment" = "Metadata had no sequences")
+  }
+  
+  # If NA in samples
+  for (j in seq_along(metadata_clean$covv_virus_name)){
+    if (is.na(metadata_clean$covv_virus_name[j])){
+      log_object <- log_object %>% 
+        add_row("oppsett" = sample_sheet$oppsett[j],
+                "comment" = "Virus name contains NAs")
+    }
+  }
+  return(log_object)
+}
+
 # Define clean up and write function --------------------------------------
 clean_up_and_write <- function(fastas_clean, metadata_clean) {
 
@@ -678,21 +699,8 @@ for (i in seq_along(sample_sheet$platform)) {
     fastas_clean <- remove_FS_fasta(fastas)
     metadata_clean <- remove_FS_metadata(metadata)
     
-    # If empty metadata
-    if (nrow(metadata_clean) == 0) {
-      log_object <- log_object %>% 
-        add_row("oppsett" = sample_sheet$oppsett[i],
-                "comment" = "had no sequences")
-    }
-    
-    # If NA in samples
-    for (j in seq_along(metadata_clean$covv_virus_name)){
-      if (is.na(metadata_clean[j,])){
-        log_object <- log_object %>% 
-          add_row("oppsett" = sample_sheet$oppsett[j],
-                  "comment" = "Contained NAs")
-      }
-    }
+    #### Check for empty data or NA ####
+    check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
@@ -727,21 +735,8 @@ for (i in seq_along(sample_sheet$platform)) {
     fastas_clean <- remove_FS_fasta(fastas)
     metadata_clean <- remove_FS_metadata(metadata)
     
-    # If empty metadata
-    if (nrow(metadata_clean) == 0) {
-      log_object <- log_object %>% 
-        add_row("oppsett" = sample_sheet$oppsett[i],
-                "comment" = "had no sequences")
-    }
-    
-    # If NA in samples
-    for (j in seq_along(metadata_clean$covv_virus_name)){
-      if (is.na(metadata_clean$covv_virus_name[j])){
-        log_object <- log_object %>% 
-          add_row("oppsett" = sample_sheet$oppsett[i],
-                  "comment" = "Contained NAs")
-      }
-    }
+    #### Check for empty data or NA ####
+    check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
@@ -776,21 +771,8 @@ for (i in seq_along(sample_sheet$platform)) {
     fastas_clean <- remove_FS_fasta(fastas)
     metadata_clean <- remove_FS_metadata(metadata)
     
-    # If empty metadata
-    if (nrow(metadata_clean) == 0) {
-      log_object <- log_object %>% 
-        add_row("oppsett" = sample_sheet$oppsett[i],
-                "comment" = "had no sequences")
-    }
-    
-    # If NA in samples
-    for (j in seq_along(metadata_clean$covv_virus_name)){
-      if (is.na(metadata_clean$covv_virus_name[j])){
-        log_object <- log_object %>% 
-          add_row("oppsett" = sample_sheet$oppsett[i],
-                  "comment" = "Contained NAs")
-      }
-    }
+    #### Check for empty data or NA ####
+    check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
@@ -824,21 +806,8 @@ for (i in seq_along(sample_sheet$platform)) {
     fastas_clean <- remove_FS_fasta(fastas)
     metadata_clean <- remove_FS_metadata(metadata)
     
-    # If empty metadata
-    if (nrow(metadata_clean) == 0) {
-      log_object <- log_object %>% 
-        add_row("oppsett" = sample_sheet$oppsett[i],
-                "comment" = "had no sequences")
-    }
-    
-    # If NA in samples
-    for (j in seq_along(metadata_clean$covv_virus_name)){
-      if (is.na(metadata_clean$covv_virus_name[j])){
-        log_object <- log_object %>% 
-          add_row("oppsett" = sample_sheet$oppsett[i],
-                  "comment" = "Contained NAs")
-      }
-    }
+    #### Check for empty data or NA ####
+    check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
