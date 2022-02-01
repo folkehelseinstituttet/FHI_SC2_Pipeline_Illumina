@@ -14,6 +14,10 @@ try(load(file = "N:/Virologi/JonBrate/Prosjekter/BN.RData"))
 
 # Check Swift FHI
 BN %>%
+  # Convert empty strings to NA
+  mutate_all(list(~na_if(.,""))) %>%
+  # Get the Swift FHI plates
+  filter(str_detect(SEKV_OPPSETT_SWIFT7, "FHI")) %>%
   # Filtrer på coverage >= 94%
   filter(Dekning_Swift >=94) %>%
   # Format the date
@@ -23,17 +27,15 @@ BN %>%
   # Fjerne evt positive kontroller
   filter(str_detect(KEY, "pos", negate = TRUE)) %>%
   # Fjerne de som allerede er submittet til Gisaid. NB - husk å importere submisjonsresultater først.
-  # Using the is.na() filter because there could be other strings than the EPI_ISL accession written
-  filter(GISAID_EPI_ISL == "") %>%
-  #filter(is.na(GISAID_EPI_ISL)) %>% pull(GISAI
-  # Get the various platesD_EPI_ISL)
-  select(KEY, PROVE_TATT, SEKV_OPPSETT_SWIFT7) %>%
-  filter(str_detect(SEKV_OPPSETT_SWIFT7, "FHI")) %>%
-  # Select one sample per oppsett
-  group_by(SEKV_OPPSETT_SWIFT7) %>%
-  slice_head(n = 1) %>%
-  # Sort by date
-  arrange(desc(PROVE_TATT)) %>% View("Swift_FHI")
+  filter(is.na(GISAID_EPI_ISL)) %>% pull(GISAI
+  # Get the various platesL)
+  select(SEKV_OPPSETT_SWIFT7) %>%
+  distinct() %>%
+  # Create numeric column for sorting
+  mutate("tmp" = as.numeric(str_remove(SEKV_OPPSETT_SWIFT7, "FHI"))) %>% 
+  arrange(desc(tmp)) %>% 
+  select(SEKV_OPPSETT_SWIFT7) %>% 
+  View("Swift_FHI")
 
 # Check Artic Illumina
 BN %>%
