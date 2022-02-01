@@ -39,6 +39,8 @@ BN %>%
 
 # Check Artic Illumina
 BN %>%
+  # Convert empty strings to NA
+  mutate_all(list(~na_if(.,""))) %>% 
   # Filtrer på coverage >= 94%
   filter(Dekning_Artic >=94) %>%
   # Format the date
@@ -48,17 +50,17 @@ BN %>%
   # Fjerne evt positive kontroller
   filter(str_detect(KEY, "pos", negate = TRUE)) %>%
   # Fjerne de som allerede er submittet til Gisaid. NB - husk å importere submisjonsresultater først.
-  # Using the is.na() filter because there could be other strings than the EPI_ISL accession written
-  filter(GISAID_EPI_ISL == "") %>%
-  #filter(is.na(GISAID_EPI_ISL)) %>%
+  filter(is.na(GISAID_EPI_ISL)) %>%
   # Get the various plates
-  select(KEY, PROVE_TATT, SAMPLE_CATEGORY) %>%
-  filter(str_detect(SAMPLE_CATEGORY, "naekstrakt", negate = TRUE)) %>%
-  # Select one sample per oppsett
-  group_by(SAMPLE_CATEGORY) %>%
-  slice_head(n = 1) %>%
-  # Sort by date
-  arrange(desc(PROVE_TATT)) %>% View("Artic_Illumina")
+  select(SAMPLE_CATEGORY) %>%
+  # Remove some wrong entries
+  filter(str_detect(SAMPLE_CATEGORY, "naekstrakt", negate = TRUE)) %>% 
+  filter(str_detect(SAMPLE_CATEGORY, "Nano", negate = TRUE)) %>% 
+  # Create column for sorting
+  separate(SAMPLE_CATEGORY, into = c(NA, "tmp"), sep = "/", remove = FALSE) %>% 
+  mutate("tmp" = as.numeric(tmp)) %>% 
+  arrange(desc(tmp)) %>% 
+  select(SAMPLE_CATEGORY) %>% View("Artic_Illumina")
 
 # Check Nanopore
 BN %>%
