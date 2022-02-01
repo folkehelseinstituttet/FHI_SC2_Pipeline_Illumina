@@ -82,23 +82,19 @@ BN %>%
 
 # Check MIK
 BN %>%
+  # Convert empty strings to NA
+  mutate_all(list(~na_if(.,""))) %>% 
   # Filtrer på coverage >= 94%
   filter(Dekning_Swift >=94) %>%
+  # Trekk ut OUS-prøver
   filter(str_detect(SEKV_OPPSETT_SWIFT7, "MIK")) %>%
   # Format the date
   mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>%
-  # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
-  # filter(!is.na(MELDT_SMITTESPORING)) %>%
   # Fjerne evt positive kontroller
   filter(str_detect(KEY, "pos", negate = TRUE)) %>%
   # Fjerne de som allerede er submittet til Gisaid. NB - husk å importere submisjonsresultater først.
-  # Using the is.na() filter because there could be other strings than the EPI_ISL accession written
-  filter(GISAID_EPI_ISL == "") %>%
-  #filter(is.na(GISAID_EPI_ISL)) %>%
+  filter(is.na(GISAID_EPI_ISL)) %>%
   # Get the various plates
-  select(KEY, PROVE_TATT, SEKV_OPPSETT_SWIFT7) %>%
-  # Select one sample per oppsett
-  group_by(SEKV_OPPSETT_SWIFT7) %>%
-  slice_head(n = 1) %>%
-  # Sort by date
-  arrange(desc(PROVE_TATT)) %>% View("Swift_MIK")
+  select(SEKV_OPPSETT_SWIFT7) %>%
+  distinct() %>%
+  View("Swift_MIK")
