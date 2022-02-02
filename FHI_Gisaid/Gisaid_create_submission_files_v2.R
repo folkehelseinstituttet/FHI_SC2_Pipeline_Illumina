@@ -6,7 +6,7 @@
 #############################################
 
 # Load packages
-pacman::p_load(optparse, phylotools, tidyverse, readxl, stringr, lubridate, readxl)
+pacman::p_load(optparse, phylotools, tidyverse, readxl, stringr, lubridate)
 
 # Load sample sheet
 args = commandArgs(trailingOnly=TRUE)
