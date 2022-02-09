@@ -736,7 +736,7 @@ clean_up_and_write <- function(fastas_clean, metadata_clean) {
 
 # Start script ------------------------------------------------------------
 for (i in seq_along(sample_sheet$platform)) {
-  print(paste("Processing oppsett", sample_sheet$oppsett[i]))
+  print(paste("Processing", sample_sheet$oppsett[i]))
 
   #### Trekke ut prøver ####
   oppsett_details_final <- filter_BN()
@@ -759,6 +759,8 @@ for (i in seq_along(sample_sheet$platform)) {
     if (nrow(metadata_clean) > 0){
       metadata_final <- bind_rows(metadata_final, metadata_clean)
       fastas_final <- bind_rows(fastas_final, fastas_clean)
+      # Clean up
+      file.rename("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx", paste0("/home/docker/Fastq/FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
     } else {
       print(paste(sample_sheet$platform[i], "is empty. Check the log"))
     }
@@ -766,8 +768,8 @@ for (i in seq_along(sample_sheet$platform)) {
   
   # Clean up
   #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-  suppressMessages(try(setwd("/home/docker/Fastq/")))
-  file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
+  # suppressMessages(try(setwd("/home/docker/Fastq/")))
+  # file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
 }
   
 # Write final objects
