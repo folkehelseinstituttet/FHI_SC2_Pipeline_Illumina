@@ -782,7 +782,6 @@ for (i in seq_along(sample_sheet$platform)) {
     if (nrow(metadata_clean) > 0){
       metadata_final <- bind_rows(metadata_final, metadata_clean)
       fastas_final <- bind_rows(fastas_final, fastas_clean)
-      log_final <- bind_rows(log_final, log_object)
       # Clean up
       file.rename("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx", paste0("/home/docker/Fastq/FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
     } else {
@@ -790,10 +789,8 @@ for (i in seq_along(sample_sheet$platform)) {
     }
   }
   
-  # Clean up
-  #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-  # suppressMessages(try(setwd("/home/docker/Fastq/")))
-  # file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
+  # Update the log
+  log_final <- bind_rows(log_final, log_object)
 }
   
 # Write final objects
