@@ -36,6 +36,7 @@ covv_sampling_strategy <- "Unknown"
 log_object <- tibble(
   "oppsett" = character(),
   "key" = character(),
+  "sequence_id" = character(),
   "comment" = character()
 )
 
@@ -414,136 +415,143 @@ find_sequences <- function(platform, oppsett) {
   }
 
   # Find which filepaths to keep
-  keep <- vector("character", length = length(oppsett_details_final$SEARCH_COLUMN))
-  for (i in seq_along(oppsett_details_final$SEARCH_COLUMN)){
-    if (length(grep(oppsett_details_final$SEARCH_COLUMN[i], filepaths)) == 0){
+  #keep <- vector("character", length = length(oppsett_details_final$SEARCH_COLUMN))
+  keep <- vector("character")
+  for (y in seq_along(oppsett_details_final$SEARCH_COLUMN)){
+    if (length(grep(oppsett_details_final$SEARCH_COLUMN[y], filepaths)) == 0){
       log_object <- log_object %>% 
-        add_row("key" = oppsett_details_final$SEARCH_COLUMN[i],
+        add_row("sequence_id" = oppsett_details_final$SEARCH_COLUMN[y],
                 "comment" = "had no sequence, probably wrong folder name in BN")
     } else {
-      keep[i] <- filepaths[grep(oppsett_details_final$SEARCH_COLUMN[i], filepaths)] 
+      keep[y] <- filepaths[grep(oppsett_details_final$SEARCH_COLUMN[y], filepaths)] 
     }
   }
-
+  # Drop empty elements in keep (where no sequence file was found for the sequence id)
+  keep <- keep[!is.na(keep)]
   # Read each fasta file and combine them to create one file
   # First create empty data frame to fill
   fastas <- data.frame(seq.name = character(),
                        seq.text = character())
-
-  for (f in seq_along(keep)){
-    tmp <- read.fasta(keep[f])      # read the file
-    fastas <- rbind(fastas, tmp)    # append the current file
+  
+  # Read the fasta sequences
+  if (length(keep) > 0){
+    for (f in seq_along(keep)){
+      tmp <- read.fasta(keep[f])      # read the file
+      fastas <- rbind(fastas, tmp)    # append the current file
+    }
+    # Convert to tibble for easier manipulation
+    fastas <- as_tibble(fastas)
+    
+    # Fix names to match KEY
+    if (platform == "Swift_FHI") {
+      # Fix names to match SEQUENCEID_SWIFT
+      fastas <- fastas %>%
+        mutate(SEQUENCEID_SWIFT = str_remove(seq.name, "_ivar_masked"))
+    } else if (platform == "Swift_MIK") {
+      # Fix names to match SEQUENCEID_SWIFT
+      fastas <- fastas %>%
+        mutate("tmp" = str_remove(seq.name, "_ivar_masked")) %>%
+        mutate(SEQUENCE_ID_TRIMMED = gsub(".*OUS-", "", .$tmp))
+    } else if (platform == "Artic_Illumina") {
+      fastas <- fastas %>%
+        rename("RES_CDC_INFB_CT" = `seq.name`)
+    } else if (platform == "Artic_Nanopore") {
+      # Fix names to match SEQUENCEID_NANO29
+      fastas <- fastas %>%
+        separate("seq.name", into = c("SEQUENCEID_NANO29", NA, NA), sep = "/", remove = F)
+    }
+    
+    # Sett Virus name som fasta header
+    # Først lage en mapping mellom KEY og virus name
+    if (platform == "Swift_FHI") {
+      SEQUENCEID_virus_mapping <- oppsett_details_final %>%
+        # Trenger også å lage Virus name
+        # Lage kolonne for "year"
+        separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+        # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+        mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+        # Fjerne ledende nuller fra stammenavnet
+        mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
+        # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+        add_column("Separator" = "/",
+                   "GISAID_prefix" = "hCoV-19/",
+                   "Country" = "Norway/",
+                   "Continent" = "Europe/") %>%
+        # Make "Virus name" column
+        unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+        select(KEY, SEQUENCEID_SWIFT, covv_virus_name)
+      
+      fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "SEQUENCEID_SWIFT") %>%
+        select(`seq.name` = covv_virus_name,
+               seq.text)
+      
+    } else if (platform == "Swift_MIK") {
+      KEY_virus_mapping <- oppsett_details_final %>%
+        # Lage kolonne for "year"
+        separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+        # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+        mutate("Uniq_nr" = str_sub(KEY, start = 1, end = -1)) %>%
+        # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+        add_column("Separator" = "/",
+                   "GISAID_prefix" = "hCoV-19/",
+                   "Country" = "Norway/",
+                   "Continent" = "Europe/") %>%
+        # Make "Virus name" column
+        unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+        select(SEQUENCEID_SWIFT, KEY, covv_virus_name, SEQUENCE_ID_TRIMMED)
+      
+      
+      fastas <- left_join(fastas, KEY_virus_mapping, by = "SEQUENCE_ID_TRIMMED") %>%
+        select(`seq.name` = covv_virus_name,
+               seq.text)
+    } else if (platform == "Artic_Illumina") {
+      SEQUENCEID_virus_mapping <- oppsett_details_final %>%
+        # Trenger også å lage Virus name
+        # Lage kolonne for "year"
+        separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+        # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+        mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+        # Fjerne ledende nuller fra stammenavnet
+        mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
+        # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+        add_column("Separator" = "/",
+                   "GISAID_prefix" = "hCoV-19/",
+                   "Country" = "Norway/",
+                   "Continent" = "Europe/") %>%
+        # Make "Virus name" column
+        unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+        select(KEY, RES_CDC_INFB_CT, covv_virus_name)
+      
+      fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "RES_CDC_INFB_CT") %>%
+        select(`seq.name` = covv_virus_name,
+               seq.text)
+      
+    } else if (platform == "Artic_Nanopore") {
+      SEQUENCEID_virus_mapping <- oppsett_details_final %>%
+        # Trenger også å lage Virus name
+        # Lage kolonne for "year"
+        separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
+        # Trekke ut sifrene fra 5 og til det siste fra BN KEY
+        mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
+        # Fjerne ledende nuller fra stammenavnet
+        mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
+        # Legge til kolonner med fast informasjon for å lage "Virus name" senere
+        add_column("Separator" = "/",
+                   "GISAID_prefix" = "hCoV-19/",
+                   "Country" = "Norway/",
+                   "Continent" = "Europe/") %>%
+        # Make "Virus name" column
+        unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
+        select(KEY, SEQUENCEID_NANO29, covv_virus_name)
+      
+      fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "SEQUENCEID_NANO29") %>%
+        select(`seq.name` = covv_virus_name,
+               seq.text)
+    }
+  } else {
+    print(paste("No fasta files found for", oppsett))
   }
 
-  # Convert to tibble for easier manipulation
-  fastas <- as_tibble(fastas)
-
-  # Fix names to match KEY
-  if (platform == "Swift_FHI") {
-    # Fix names to match SEQUENCEID_SWIFT
-    fastas <- fastas %>%
-      mutate(SEQUENCEID_SWIFT = str_remove(seq.name, "_ivar_masked"))
-  } else if (platform == "Swift_MIK") {
-    # Fix names to match SEQUENCEID_SWIFT
-    fastas <- fastas %>%
-      mutate("tmp" = str_remove(seq.name, "_ivar_masked")) %>%
-      mutate(SEQUENCE_ID_TRIMMED = gsub(".*OUS-", "", .$tmp))
-  } else if (platform == "Artic_Illumina") {
-    fastas <- fastas %>%
-      rename("RES_CDC_INFB_CT" = `seq.name`)
-  } else if (platform == "Artic_Nanopore") {
-    # Fix names to match SEQUENCEID_NANO29
-    fastas <- fastas %>%
-      separate("seq.name", into = c("SEQUENCEID_NANO29", NA, NA), sep = "/", remove = F)
-  }
-
-  # Sett Virus name som fasta header
-  # Først lage en mapping mellom KEY og virus name
-  if (platform == "Swift_FHI") {
-    SEQUENCEID_virus_mapping <- oppsett_details_final %>%
-      # Trenger også å lage Virus name
-      # Lage kolonne for "year"
-      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-      # Fjerne ledende nuller fra stammenavnet
-      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
-      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-      add_column("Separator" = "/",
-                 "GISAID_prefix" = "hCoV-19/",
-                 "Country" = "Norway/",
-                 "Continent" = "Europe/") %>%
-      # Make "Virus name" column
-      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-      select(KEY, SEQUENCEID_SWIFT, covv_virus_name)
-
-    fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "SEQUENCEID_SWIFT") %>%
-      select(`seq.name` = covv_virus_name,
-             seq.text)
-
-  } else if (platform == "Swift_MIK") {
-    KEY_virus_mapping <- oppsett_details_final %>%
-      # Lage kolonne for "year"
-      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-      mutate("Uniq_nr" = str_sub(KEY, start = 1, end = -1)) %>%
-      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-      add_column("Separator" = "/",
-                 "GISAID_prefix" = "hCoV-19/",
-                 "Country" = "Norway/",
-                 "Continent" = "Europe/") %>%
-      # Make "Virus name" column
-      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-      select(SEQUENCEID_SWIFT, KEY, covv_virus_name, SEQUENCE_ID_TRIMMED)
-
-
-    fastas <- left_join(fastas, KEY_virus_mapping, by = "SEQUENCE_ID_TRIMMED") %>%
-      select(`seq.name` = covv_virus_name,
-             seq.text)
-  } else if (platform == "Artic_Illumina") {
-    SEQUENCEID_virus_mapping <- oppsett_details_final %>%
-      # Trenger også å lage Virus name
-      # Lage kolonne for "year"
-      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-      # Fjerne ledende nuller fra stammenavnet
-      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
-      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-      add_column("Separator" = "/",
-                 "GISAID_prefix" = "hCoV-19/",
-                 "Country" = "Norway/",
-                 "Continent" = "Europe/") %>%
-      # Make "Virus name" column
-      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-      select(KEY, RES_CDC_INFB_CT, covv_virus_name)
-
-    fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "RES_CDC_INFB_CT") %>%
-      select(`seq.name` = covv_virus_name,
-             seq.text)
-
-  } else if (platform == "Artic_Nanopore") {
-    SEQUENCEID_virus_mapping <- oppsett_details_final %>%
-      # Trenger også å lage Virus name
-      # Lage kolonne for "year"
-      separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
-      # Trekke ut sifrene fra 5 og til det siste fra BN KEY
-      mutate("Uniq_nr" = str_sub(KEY, start = 5, end = -1)) %>%
-      # Fjerne ledende nuller fra stammenavnet
-      mutate("Uniq_nr" = str_remove(Uniq_nr, "^0+")) %>%
-      # Legge til kolonner med fast informasjon for å lage "Virus name" senere
-      add_column("Separator" = "/",
-                 "GISAID_prefix" = "hCoV-19/",
-                 "Country" = "Norway/",
-                 "Continent" = "Europe/") %>%
-      # Make "Virus name" column
-      unite("covv_virus_name", c(GISAID_prefix, Country, Uniq_nr, Separator, Year), sep = "", remove = FALSE) %>%
-      select(KEY, SEQUENCEID_NANO29, covv_virus_name)
-
-    fastas <- left_join(fastas, SEQUENCEID_virus_mapping, by = "SEQUENCEID_NANO29") %>%
-      select(`seq.name` = covv_virus_name,
-             seq.text)
-  }
   return(fastas)
 }
 
@@ -657,7 +665,7 @@ FS <- function(fastas){
   dat2fasta(fastas, outfile = "tmp.fasta")
 
   # Run the frameshift script
-  suppressMessages(system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R"))
+  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
   # system("docker run --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
 
 }
