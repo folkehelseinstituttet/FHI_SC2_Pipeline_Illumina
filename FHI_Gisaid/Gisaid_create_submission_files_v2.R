@@ -785,7 +785,7 @@ for (i in seq_along(sample_sheet$platform)) {
     
     if (nrow(oppsett_details_final > 0)){
       #### Lage metadata ####
-      metadata <- create_metadata(oppsett_details)
+      metadata <- create_metadata(oppsett_details_final)
       
       #### Find sequences on N: ####
       fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
@@ -796,21 +796,17 @@ for (i in seq_along(sample_sheet$platform)) {
       metadata_clean <- remove_FS_metadata(metadata)
     }
     
-    
-    #### Check for empty data or NA ####
-    #check_final_metadata(metadata_clean)
-    
     # Join final metadata and fastas with final objects
-    if (nrow(metadata_clean) > 0){
-      metadata_final <- bind_rows(metadata_final, metadata_clean)
-      fastas_final <- bind_rows(fastas_final, fastas_clean)
+    if (exists("metadata_clean")){
+      if (nrow(metadata_clean) > 0){
+        metadata_final <- bind_rows(metadata_final, metadata_clean)
+        fastas_final <- bind_rows(fastas_final, fastas_clean)
+      } else {
+        print(paste(sample_sheet$platform[i], "is empty. Check the log"))
+      }
     }
     
-    # Kjøre en bind_rows på fastas_clean og metadata_clean?
-    # Må vel vente med denne til slutt?
-    #### Clean up and write files
-    # clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
-    
+    # Clean up
     suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
     suppressMessages(try(setwd("/home/docker/Fastq/")))
     file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
@@ -900,6 +896,11 @@ for (i in seq_along(sample_sheet$platform)) {
 suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
 suppressMessages(try(setwd("/home/docker/Fastq/")))
 
-dat2fasta(fastas_final, outfile = paste0(Sys.Date(), ".fasta"))
-write_csv(metadata_final, file = paste0(Sys.Date(), ".csv"))
-write_csv(log_object, file = paste0(Sys.Date(), ".log"))
+if (exists("metadata_final")){
+  dat2fasta(fastas_final, outfile = paste0(Sys.Date(), ".fasta"))
+  write_csv(metadata_final, file = paste0(Sys.Date(), ".csv"))
+  write_csv(log_object, file = paste0(Sys.Date(), ".log"))
+} else {
+  print("Nothing to save")
+}
+
