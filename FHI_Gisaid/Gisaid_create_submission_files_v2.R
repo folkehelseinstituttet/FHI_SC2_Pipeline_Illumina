@@ -414,9 +414,9 @@ find_sequences <- function(platform, oppsett) {
   }
 
   # Find which filepaths to keep
-  keep <- vector("character", length = length(oppsett_details$SEARCH_COLUMN))
-  for (i in seq_along(oppsett_details$SEARCH_COLUMN)){
-    keep[i] <- filepaths[grep(oppsett_details$SEARCH_COLUMN[i], filepaths)]
+  keep <- vector("character", length = length(oppsett_details_final$SEARCH_COLUMN))
+  for (i in seq_along(oppsett_details_final$SEARCH_COLUMN)){
+    keep[i] <- filepaths[grep(oppsett_details_final$SEARCH_COLUMN[i], filepaths)]
   }
 
   # Read each fasta file and combine them to create one file
@@ -454,7 +454,7 @@ find_sequences <- function(platform, oppsett) {
   # Sett Virus name som fasta header
   # Først lage en mapping mellom KEY og virus name
   if (platform == "Swift_FHI") {
-    SEQUENCEID_virus_mapping <- oppsett_details %>%
+    SEQUENCEID_virus_mapping <- oppsett_details_final %>%
       # Trenger også å lage Virus name
       # Lage kolonne for "year"
       separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
@@ -476,7 +476,7 @@ find_sequences <- function(platform, oppsett) {
              seq.text)
 
   } else if (platform == "Swift_MIK") {
-    KEY_virus_mapping <- oppsett_details %>%
+    KEY_virus_mapping <- oppsett_details_final %>%
       # Lage kolonne for "year"
       separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
       # Trekke ut sifrene fra 5 og til det siste fra BN KEY
@@ -495,7 +495,7 @@ find_sequences <- function(platform, oppsett) {
       select(`seq.name` = covv_virus_name,
              seq.text)
   } else if (platform == "Artic_Illumina") {
-    SEQUENCEID_virus_mapping <- oppsett_details %>%
+    SEQUENCEID_virus_mapping <- oppsett_details_final %>%
       # Trenger også å lage Virus name
       # Lage kolonne for "year"
       separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
@@ -517,7 +517,7 @@ find_sequences <- function(platform, oppsett) {
              seq.text)
 
   } else if (platform == "Artic_Nanopore") {
-    SEQUENCEID_virus_mapping <- oppsett_details %>%
+    SEQUENCEID_virus_mapping <- oppsett_details_final %>%
       # Trenger også å lage Virus name
       # Lage kolonne for "year"
       separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>%
