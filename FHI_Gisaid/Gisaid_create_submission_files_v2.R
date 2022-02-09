@@ -366,7 +366,7 @@ find_sequences <- function(platform, oppsett) {
 
   } else if (platform == "Swift_MIK") {
     # Search the N: disk for consensus sequences.
-    # try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE))
+    # dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE)
     try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE))
     # Pick our the relevant oppsett
     dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
@@ -416,7 +416,13 @@ find_sequences <- function(platform, oppsett) {
   # Find which filepaths to keep
   keep <- vector("character", length = length(oppsett_details_final$SEARCH_COLUMN))
   for (i in seq_along(oppsett_details_final$SEARCH_COLUMN)){
-    keep[i] <- filepaths[grep(oppsett_details_final$SEARCH_COLUMN[i], filepaths)]
+    if (length(grep(oppsett_details_final$SEARCH_COLUMN[i], filepaths)) == 0){
+      log_object <- log_object %>% 
+        add_row("key" = oppsett_details_final$SEARCH_COLUMN[i],
+                "comment" = "had no sequence, probably wrong folder name in BN")
+    } else {
+      keep[i] <- filepaths[grep(oppsett_details_final$SEARCH_COLUMN[i], filepaths)] 
+    }
   }
 
   # Read each fasta file and combine them to create one file
