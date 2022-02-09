@@ -135,7 +135,7 @@ lab_lookup_table <- tribble(
 ## Define functions
 #############################################
 
-# Define lookup function to decide originating lab and andress ------------
+# Define lookup function to decide originating lab and adress ------------
 lookup_function <- function(metadata) {
   for (row in seq_along(metadata$INNSENDER)) {
     if (metadata[row,]$INNSENDER == 0){
@@ -230,14 +230,35 @@ lookup_function <- function(metadata) {
 # Define filter function --------------------------------------------------
 filter_BN <- function(BN) {
     if (sample_sheet$platform[i] == "Artic_Illumina") {
-    oppsett_details <- tmp %>%
-      filter(str_detect(SAMPLE_CATEGORY, sample_sheet$oppsett[i])) %>%
-      # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
-      filter(!is.na(MELDT_SMITTESPORING)) %>%
-      # Filtrer på coverage >= 94%
-      filter(Dekning_Artic >=94) %>%
-      mutate(SEARCH_COLUMN = RES_CDC_INFB_CT) %>%
-      rename("COVERAGE" = RES_CDC_INFA_RX)
+      oppsett_details <- tmp %>%
+        filter(str_detect(SAMPLE_CATEGORY, sample_sheet$oppsett[i])) %>%
+        # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
+        filter(!is.na(MELDT_SMITTESPORING)) %>%
+        # Filtrer på coverage >= 94%
+        filter(Dekning_Artic >=94) %>%
+        mutate(SEARCH_COLUMN = RES_CDC_INFB_CT) %>%
+        rename("COVERAGE" = RES_CDC_INFA_RX)
+      
+      oppsett_details_final <- oppsett_details
+      for (x in seq_along(oppsett_details$INNSENDER)){
+        # Check INNSENDER
+        if (is.na(oppsett_details$INNSENDER[x])){
+          log_object <- log_object %>% 
+            add_row("key" = oppsett_details$KEY[x],
+                    "comment" = "had no Innsender info in BN - removed from submission")
+          # Remove from submission
+          oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+        }
+        # Check Fylkenavn
+        if (is.na(oppsett_details$FYLKENAVN[x])) {
+          log_object <- log_object %>% 
+            add_row("key" = oppsett_details$KEY[x],
+                    "comment" = "had no Fylkenavn info in BN - removed from submission")
+          # Remove from submission
+          oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+        }
+      }
+     
   } else if (sample_sheet$platform[i] == "Artic_Nanopore") {
     oppsett_details <- tmp %>%
       filter(str_detect(SEKV_OPPSETT_NANOPORE, sample_sheet$oppsett[i])) %>%
@@ -247,6 +268,26 @@ filter_BN <- function(BN) {
       filter(Dekning_Nano >=94) %>%
       mutate(SEARCH_COLUMN = SEQUENCEID_NANO29) %>%
       rename("COVERAGE" = COVARAGE_DEPTH_NANO)
+    
+    oppsett_details_final <- oppsett_details
+    for (x in seq_along(oppsett_details$INNSENDER)){
+      # Check INNSENDER
+      if (is.na(oppsett_details$INNSENDER[x])){
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Innsender info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      }
+      # Check Fylkenavn
+      if (is.na(oppsett_details$FYLKENAVN[x])) {
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Fylkenavn info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      }
+    }
   } else if (sample_sheet$platform[i] == "Swift_FHI") {
     oppsett_details <- tmp %>%
       filter(str_detect(SEKV_OPPSETT_SWIFT7, sample_sheet$oppsett[i])) %>%
@@ -257,6 +298,27 @@ filter_BN <- function(BN) {
       # Create column for looping through later
       mutate(SEARCH_COLUMN = SEQUENCEID_SWIFT) %>%
       rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
+    
+    oppsett_details_final <- oppsett_details
+    for (x in seq_along(oppsett_details$INNSENDER)){
+      # Check INNSENDER
+      if (is.na(oppsett_details$INNSENDER[x])){
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Innsender info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      }
+      # Check Fylkenavn
+      if (is.na(oppsett_details$FYLKENAVN[x])) {
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Fylkenavn info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      }
+    }
+    
   } else if (sample_sheet$platform[i] == "Swift_MIK") {
     oppsett_details <- tmp %>%
       filter(str_detect(SEKV_OPPSETT_SWIFT7, sample_sheet$oppsett[i])) %>%
@@ -267,28 +329,21 @@ filter_BN <- function(BN) {
       # Create column for looping through later
       mutate(SEARCH_COLUMN = SEQUENCEID_SWIFT) %>%
       rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
-  }
-  
-  # Check for empty orig lab and Fylke
-  if (sample_sheet$platform[i] != "Swift_MIK"){
-    for (i in seq_along(oppsett_details$INNSENDER)){
-      if (is.na(oppsett_details$INNSENDER[i])){
-        # Check INNSENDER
+    
+    oppsett_details_final <- oppsett_details
+    for (x in seq_along(oppsett_details$INNSENDER)){
+      # Check Fylkenavn
+      if (is.na(oppsett_details$FYLKENAVN[x])) {
         log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[i],
-                  "comment" = "had no Innsender info in BN - removed from submission")
-        oppsett_details <- oppsett_details[-i,]
-      }else if (is.na(oppsett_details$FYLKENAVN[i])){
-        # Check Fylkeavn
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[i],
+          add_row("key" = oppsett_details$KEY[x],
                   "comment" = "had no Fylkenavn info in BN - removed from submission")
-        oppsett_details <- oppsett_details[-i,]
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       }
     }
   }
-
-    return(oppsett_details)
+  
+    return(oppsett_details_final)
 }
 
 # Find sequences on N: and create fasta object ----------------------------
@@ -491,9 +546,9 @@ find_sequences <- function(platform, oppsett) {
 
 
 # Define metadata function ------------------------------------------------
-create_metadata <- function(oppsett_details) {
+create_metadata <- function(oppsett_details_final) {
 
-  metadata <- oppsett_details %>%
+  metadata <- oppsett_details_final %>%
     # Lage kolonne for "year"
     separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE)
 
@@ -688,21 +743,23 @@ for (i in seq_along(sample_sheet$platform)) {
     print ("Platform is Swift FHI")
     
     #### Trekke ut prøver ####
-    oppsett_details <- filter_BN(BN)
+    oppsett_details_final <- filter_BN(BN)
     
-    #### Lage metadata ####
-    metadata <- create_metadata(oppsett_details)
-    
-    #### Find sequences on N: ####
-    fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-    
-    #### Run Frameshift analysis ####
-    FS(fastas)
-    fastas_clean <- remove_FS_fasta(fastas)
-    metadata_clean <- remove_FS_metadata(metadata)
+    if (nrow(oppsett_details_final > 0)){
+      #### Lage metadata ####
+      metadata <- create_metadata(oppsett_details_final)
+      
+      #### Find sequences on N: ####
+      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
+      
+      #### Run Frameshift analysis ####
+      FS(fastas)
+      fastas_clean <- remove_FS_fasta(fastas)
+      metadata_clean <- remove_FS_metadata(metadata)
+    }
     
     #### Check for empty data or NA ####
-    check_final_metadata(metadata_clean)
+    # check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
@@ -724,21 +781,24 @@ for (i in seq_along(sample_sheet$platform)) {
     print ("Platform is Swift MIK")
     
     #### Trekke ut prøver ####
-    oppsett_details <- filter_BN(BN)
+    oppsett_details_final <- filter_BN(BN)
     
-    #### Lage metadata ####
-    metadata <- create_metadata(oppsett_details)
+    if (nrow(oppsett_details_final > 0)){
+      #### Lage metadata ####
+      metadata <- create_metadata(oppsett_details)
+      
+      #### Find sequences on N: ####
+      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
+      
+      #### Run Frameshift analysis ####
+      FS(fastas)
+      fastas_clean <- remove_FS_fasta(fastas)
+      metadata_clean <- remove_FS_metadata(metadata)
+    }
     
-    #### Find sequences on N: ####
-    fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-    
-    #### Run Frameshift analysis ####
-    FS(fastas)
-    fastas_clean <- remove_FS_fasta(fastas)
-    metadata_clean <- remove_FS_metadata(metadata)
     
     #### Check for empty data or NA ####
-    check_final_metadata(metadata_clean)
+    #check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
@@ -760,21 +820,24 @@ for (i in seq_along(sample_sheet$platform)) {
     print ("Platform is Artic Illumina")
 
     ##### Trekke ut prøver ####
-    oppsett_details <- filter_BN(BN)
+    oppsett_details_final <- filter_BN(BN)
     
-    #### Lage metadata ####
-    metadata <- create_metadata(oppsett_details)
-    
-    #### Find sequences on N: ####
-    fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-    
-    #### Run Frameshift analysis ####
-    FS(fastas)
-    fastas_clean <- remove_FS_fasta(fastas)
-    metadata_clean <- remove_FS_metadata(metadata)
+    if (nrow(oppsett_details_final > 0)){
+      #### Lage metadata ####
+      metadata <- create_metadata(oppsett_details)
+      
+      #### Find sequences on N: ####
+      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
+      
+      #### Run Frameshift analysis ####
+      FS(fastas)
+      fastas_clean <- remove_FS_fasta(fastas)
+      metadata_clean <- remove_FS_metadata(metadata)
+    }
+
     
     #### Check for empty data or NA ####
-    check_final_metadata(metadata_clean)
+    #check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
@@ -795,21 +858,24 @@ for (i in seq_along(sample_sheet$platform)) {
     print ("Platform is Artic Nanopore")
 
     ##### Trekke ut prøver ####
-    oppsett_details <- filter_BN(BN)
+    oppsett_details_final <- filter_BN(BN)
     
-    #### Lage metadata ####
-    metadata <- create_metadata(oppsett_details)
+    if (nrow(oppsett_details_final > 0)){
+      #### Lage metadata ####
+      metadata <- create_metadata(oppsett_details)
+      
+      #### Find sequences on N: ####
+      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
+      
+      #### Run Frameshift analysis ####
+      FS(fastas)
+      fastas_clean <- remove_FS_fasta(fastas)
+      metadata_clean <- remove_FS_metadata(metadata)
+    }
     
-    #### Find sequences on N: ####
-    fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-    
-    #### Run Frameshift analysis ####
-    FS(fastas)
-    fastas_clean <- remove_FS_fasta(fastas)
-    metadata_clean <- remove_FS_metadata(metadata)
     
     #### Check for empty data or NA ####
-    check_final_metadata(metadata_clean)
+   # check_final_metadata(metadata_clean)
     
     # Join final metadata and fastas with final objects
     if (nrow(metadata_clean) > 0){
