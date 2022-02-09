@@ -803,7 +803,7 @@ suppressMessages(try(setwd("/home/docker/Fastq/")))
 if (exists("metadata_final")){
   dat2fasta(fastas_final, outfile = paste0(Sys.Date(), ".fasta"))
   write_csv(metadata_final, file = paste0(Sys.Date(), ".csv"))
-  write_csv(log_object, file = paste0(Sys.Date(), ".log"))
+  write_csv(log_final, file = paste0(Sys.Date(), ".log"))
 } else {
   print("Nothing to save")
 }
