@@ -35,6 +35,7 @@ covv_sampling_strategy <- "Unknown"
 # Create empty objects to populate ----------------------------------------
 log_object <- tibble(
   "oppsett" = character(),
+  "key" = character(),
   "comment" = character()
 )
 
@@ -78,6 +79,23 @@ try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
 try(load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData"))
 # Convert empty strings to NA
 BN <- BN %>% mutate_all(list(~na_if(.,"")))
+
+# Initial filtering and cleaning
+tmp <- BN %>%
+  # Remove previously submitted samples
+  filter(is.na(GISAID_EPI_ISL)) %>% 
+  # Fjerne evt positiv controll
+  filter(str_detect(KEY, "pos", negate = TRUE)) %>%
+  # Endre Trøndelag til Trondelag
+  mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Tr\xf8ndelag", "Trondelag")) %>%
+  # Endre Møre og Romsdal
+  mutate("FYLKENAVN" = str_replace(FYLKENAVN, "M\xf8re", "More")) %>%
+  # Endre Sør
+  mutate("FYLKENAVN" = str_replace(FYLKENAVN, "S\xf8r", "Sor")) %>%
+  # Fix date format
+  mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>%
+  # Drop samples witout collection date
+  filter(!is.na(PROVE_TATT))
 
 # Set originating labs and adresses ---------------------------------------
 lab_lookup_table <- tribble(
@@ -211,22 +229,6 @@ lookup_function <- function(metadata) {
 
 # Define filter function --------------------------------------------------
 filter_BN <- function(BN) {
-  tmp <- BN %>%
-    # Remove previously submitted samples
-    filter(is.na(GISAID_EPI_ISL)) %>% 
-    # Fjerne evt positiv controll
-    filter(str_detect(KEY, "pos", negate = TRUE)) %>%
-    # Endre Trøndelag til Trondelag
-    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "Tr\xf8ndelag", "Trondelag")) %>%
-    # Endre Møre og Romsdal
-    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "M\xf8re", "More")) %>%
-    # Endre Sør
-    mutate("FYLKENAVN" = str_replace(FYLKENAVN, "S\xf8r", "Sor")) %>%
-    # Fix date format
-    mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>%
-    # Drop samples witout collection date
-    filter(!is.na(PROVE_TATT))
-
     if (sample_sheet$platform[i] == "Artic_Illumina") {
     oppsett_details <- tmp %>%
       filter(str_detect(SAMPLE_CATEGORY, sample_sheet$oppsett[i])) %>%
@@ -273,13 +275,13 @@ filter_BN <- function(BN) {
       if (is.na(oppsett_details$INNSENDER[i])){
         # Check INNSENDER
         log_object <- log_object %>% 
-          add_row("oppsett" = oppsett_details$KEY[i],
+          add_row("key" = oppsett_details$KEY[i],
                   "comment" = "had no Innsender info in BN - removed from submission")
         oppsett_details <- oppsett_details[-i,]
       }else if (is.na(oppsett_details$FYLKENAVN[i])){
         # Check Fylkeavn
         log_object <- log_object %>% 
-          add_row("oppsett" = oppsett_details$KEY[i],
+          add_row("key" = oppsett_details$KEY[i],
                   "comment" = "had no Fylkenavn info in BN - removed from submission")
         oppsett_details <- oppsett_details[-i,]
       }
