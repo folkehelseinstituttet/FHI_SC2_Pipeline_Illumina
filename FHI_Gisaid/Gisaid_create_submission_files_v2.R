@@ -75,7 +75,7 @@ fastas_final <- tibble(
 )
 
 # Read data from BioNumerics ----------------------------------------------
-try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
+#try(load(file = "/mnt/N/Virologi/JonBrate/Prosjekter/BN.RData"))
 try(load(file = "/home/docker/N/JonBrate/Prosjekter/BN.RData"))
 # Convert empty strings to NA
 BN <- BN %>% mutate_all(list(~na_if(.,"")))
@@ -228,7 +228,7 @@ lookup_function <- function(metadata) {
 }
 
 # Define filter function --------------------------------------------------
-filter_BN <- function(BN) {
+filter_BN <- function() {
     if (sample_sheet$platform[i] == "Artic_Illumina") {
       oppsett_details <- tmp %>%
         filter(str_detect(SAMPLE_CATEGORY, sample_sheet$oppsett[i])) %>%
@@ -350,8 +350,7 @@ filter_BN <- function(BN) {
 find_sequences <- function(platform, oppsett) {
   if (platform == "Swift_FHI"){
     # Search the N: disk for consensus sequences
-    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE),
-                      list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2022/", recursive = FALSE)))
+    #try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE), list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2022/", recursive = FALSE)))
     try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2021/", recursive = FALSE),
                       list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_FHI/2022/", recursive = FALSE)))
 
@@ -367,7 +366,7 @@ find_sequences <- function(platform, oppsett) {
 
   } else if (platform == "Swift_MIK") {
     # Search the N: disk for consensus sequences.
-    try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE))
+    # try(dirs_fhi <- list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE))
     try(dirs_fhi <- list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina_NSC_MIK", recursive = FALSE))
     # Pick our the relevant oppsett
     dir <- dirs_fhi[grep(paste0(oppsett, "\\b"), dirs_fhi)]
@@ -381,8 +380,7 @@ find_sequences <- function(platform, oppsett) {
     samples <- gsub("_.*","", gsub(".*/","", filepaths))
   } else if (platform == "Artic_Illumina") {
     # Search the N: disk for consensus sequences.
-    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE),
-                      list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2022", recursive = FALSE)))
+    #try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE), list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2022", recursive = FALSE)))
     try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2021", recursive = FALSE),
                       list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Illumina/2022", recursive = FALSE)))
 
@@ -400,8 +398,7 @@ find_sequences <- function(platform, oppsett) {
     #samples <- str_sub(gsub("Artic", "", gsub("_.*","", gsub(".*/","", filepaths))), start = 1, end = -2)
   } else if (platform == "Artic_Nanopore") {
     # Search the N: disk for consensus sequences.
-    try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE),
-                      list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2022", recursive = FALSE)))
+    #try(dirs_fhi <- c(list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE), list.dirs("/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2022", recursive = FALSE)))
     try(dirs_fhi <- c(list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2021", recursive = FALSE),
                       list.dirs("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/1-Nanopore/2022", recursive = FALSE)))
 
@@ -647,7 +644,7 @@ create_metadata <- function(oppsett_details_final) {
 FS <- function(fastas){
   #### Run Frameshift analysis ####
   # write temporary fasta file to Frameshift folder
-  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
+  #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
   suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # dat2fasta(fastas, outfile = "/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift/tmp.fasta")
 
@@ -662,7 +659,7 @@ FS <- function(fastas){
 # Remove bad FS from fasta ------------------------------------------------
 remove_FS_fasta <- function(fastas){
   #### Remove any samples with bad FS ####
-  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
+  #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
   suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   FS_OK <- read_excel("FrameShift_tmp.xlsx") %>%
     filter(Ready == "YES") %>%
@@ -678,7 +675,7 @@ remove_FS_fasta <- function(fastas){
 # Remove bad FS from metadata ---------------------------------------------
 remove_FS_metadata <- function(metadata){
   #### Drop the same samples from the metadata file #####
-  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
+  #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
   suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # Define samples to keep (i.e. with OK FS)
   FS_OK <- read_excel("FrameShift_tmp.xlsx") %>%
@@ -716,7 +713,7 @@ check_final_metadata <- function(metadata_clean) {
 # Define clean up and write function --------------------------------------
 clean_up_and_write <- function(fastas_clean, metadata_clean) {
 
-  suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
+  #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
   suppressMessages(try(setwd("/home/docker/Fastq/")))
 
   if (platform == "Artic_Nanopore") {
@@ -739,161 +736,42 @@ clean_up_and_write <- function(fastas_clean, metadata_clean) {
 
 # Start script ------------------------------------------------------------
 for (i in seq_along(sample_sheet$platform)) {
-  if (sample_sheet$platform[i] == "Swift_FHI"){
-    print ("Platform is Swift FHI")
-    
-    #### Trekke ut prøver ####
-    oppsett_details_final <- filter_BN(BN)
-    
-    if (nrow(oppsett_details_final > 0)){
-      #### Lage metadata ####
-      metadata <- create_metadata(oppsett_details_final)
-      
-      #### Find sequences on N: ####
-      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-      
-      #### Run Frameshift analysis ####
-      FS(fastas)
-      fastas_clean <- remove_FS_fasta(fastas)
-      metadata_clean <- remove_FS_metadata(metadata)
-    }
-    
-    #### Check for empty data or NA ####
-    # check_final_metadata(metadata_clean)
-    
-    # Join final metadata and fastas with final objects
-    if (nrow(metadata_clean) > 0){
-      metadata_final <- bind_rows(metadata_final, metadata_clean)
-      fastas_final <- bind_rows(fastas_final, fastas_clean)
-    }
-    
-    # Kjøre en bind_rows på fastas_clean og metadata_clean?
-    # Må vel vente med denne til slutt?
-    #### Clean up and write files
-    # clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
-    
-    suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-    suppressMessages(try(setwd("/home/docker/Fastq/")))
-    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
-    
-    
-  } else if (sample_sheet$platform[i] == "Swift_MIK") {
-    print ("Platform is Swift MIK")
-    
-    #### Trekke ut prøver ####
-    oppsett_details_final <- filter_BN(BN)
-    
-    if (nrow(oppsett_details_final > 0)){
-      #### Lage metadata ####
-      metadata <- create_metadata(oppsett_details_final)
-      
-      #### Find sequences on N: ####
-      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-      
-      #### Run Frameshift analysis ####
-      FS(fastas)
-      fastas_clean <- remove_FS_fasta(fastas)
-      metadata_clean <- remove_FS_metadata(metadata)
-    }
-    
-    # Join final metadata and fastas with final objects
-    if (exists("metadata_clean")){
-      if (nrow(metadata_clean) > 0){
-        metadata_final <- bind_rows(metadata_final, metadata_clean)
-        fastas_final <- bind_rows(fastas_final, fastas_clean)
-      } else {
-        print(paste(sample_sheet$platform[i], "is empty. Check the log"))
-      }
-    }
-    
-    # Clean up
-    suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-    suppressMessages(try(setwd("/home/docker/Fastq/")))
-    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
-    
-    
-  } else if (sample_sheet$platform[i] == "Artic_Illumina") {
-    print ("Platform is Artic Illumina")
+  print(paste("Processing oppsett", sample_sheet$oppsett[i]))
 
-    ##### Trekke ut prøver ####
-    oppsett_details_final <- filter_BN(BN)
+  #### Trekke ut prøver ####
+  oppsett_details_final <- filter_BN()
+  
+  if (nrow(oppsett_details_final > 0)){
+    #### Lage metadata ####
+    metadata <- create_metadata(oppsett_details_final)
     
-    if (nrow(oppsett_details_final > 0)){
-      #### Lage metadata ####
-      metadata <- create_metadata(oppsett_details)
-      
-      #### Find sequences on N: ####
-      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-      
-      #### Run Frameshift analysis ####
-      FS(fastas)
-      fastas_clean <- remove_FS_fasta(fastas)
-      metadata_clean <- remove_FS_metadata(metadata)
-    }
-
+    #### Find sequences on N: ####
+    fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
     
-    #### Check for empty data or NA ####
-    #check_final_metadata(metadata_clean)
-    
-    # Join final metadata and fastas with final objects
-    if (nrow(metadata_clean) > 0){
-      metadata_final <- bind_rows(metadata_final, metadata_clean)
-      fastas_final <- bind_rows(fastas_final, fastas_clean)
-    }
-    
-    # Kjøre en bind_rows på fastas_clean og metadata_clean?
-    # Må vel vente med denne til slutt?
-    #### Clean up and write files
-    # clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
-    
-    suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-    suppressMessages(try(setwd("/home/docker/Fastq/")))
-    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
-    
-  } else if (sample_sheet$platform[i] == "Artic_Nanopore") {
-    print ("Platform is Artic Nanopore")
-
-    ##### Trekke ut prøver ####
-    oppsett_details_final <- filter_BN(BN)
-    
-    if (nrow(oppsett_details_final > 0)){
-      #### Lage metadata ####
-      metadata <- create_metadata(oppsett_details)
-      
-      #### Find sequences on N: ####
-      fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
-      
-      #### Run Frameshift analysis ####
-      FS(fastas)
-      fastas_clean <- remove_FS_fasta(fastas)
-      metadata_clean <- remove_FS_metadata(metadata)
-    }
-    
-    
-    #### Check for empty data or NA ####
-   # check_final_metadata(metadata_clean)
-    
-    # Join final metadata and fastas with final objects
-    if (nrow(metadata_clean) > 0){
-      metadata_final <- bind_rows(metadata_final, metadata_clean)
-      fastas_final <- bind_rows(fastas_final, fastas_clean)
-    }
-    
-    # Kjøre en bind_rows på fastas_clean og metadata_clean?
-    # Må vel vente med denne til slutt?
-    #### Clean up and write files
-    # clean_up_and_write(fastas = fastas_clean, metadata = metadata_clean)
-    
-    suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-    suppressMessages(try(setwd("/home/docker/Fastq/")))
-    oppsett_stripped <- gsub("/", "", sample_sheet$oppsett[i])
-    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett_stripped, ".xlsx"))
+    #### Run Frameshift analysis ####
+    FS(fastas)
+    fastas_clean <- remove_FS_fasta(fastas)
+    metadata_clean <- remove_FS_metadata(metadata)
   }
   
+  # Join final metadata and fastas with final objects
+  if (exists("metadata_clean")){
+    if (nrow(metadata_clean) > 0){
+      metadata_final <- bind_rows(metadata_final, metadata_clean)
+      fastas_final <- bind_rows(fastas_final, fastas_clean)
+    } else {
+      print(paste(sample_sheet$platform[i], "is empty. Check the log"))
+    }
+  }
+  
+  # Clean up
+  #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
+  suppressMessages(try(setwd("/home/docker/Fastq/")))
+  file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
 }
-
+  
 # Write final objects
-suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
+#suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
 suppressMessages(try(setwd("/home/docker/Fastq/")))
 
 if (exists("metadata_final")){
