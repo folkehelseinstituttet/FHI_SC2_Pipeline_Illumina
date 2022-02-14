@@ -210,7 +210,7 @@ for (pl in 1:length(sample.uniq)) {
     theme_minimal()+
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 4))+
     ylim(0, max(out.agg2.n$ReadsN100+out.agg2.n$SD))+
-    ylab("Mean Number of Normalized100 Reads")+
+    ylab("Mean Num of N100 Reads")+
     ggtitle(sample.uniq[pl])
   
   
@@ -273,7 +273,7 @@ if(length(pdf.list)>1){
  ggplot(out)+
    geom_line(aes(Base, ReadsN100), colour="red")+
    theme_minimal()+
-   ylab("Normalized100 Number of Reads (mean)")+
+   ylab("N100 Num of Reads (mean)")+
    facet_wrap(~SampleLineage)
  
  ggsave(gsub("_NextcladeAndPangolin.csv","_Depth_Norm_Sample.pdf", runid), width = 22, height = 16)
