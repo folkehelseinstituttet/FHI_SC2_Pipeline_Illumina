@@ -27,8 +27,8 @@ BN %>%
   # Fjerne evt positive kontroller
   filter(str_detect(KEY, "pos", negate = TRUE)) %>%
   # Fjerne de som allerede er submittet til Gisaid. NB - husk å importere submisjonsresultater først.
-  filter(is.na(GISAID_EPI_ISL)) %>% pull(GISAI
-  # Get the various platesL)
+  filter(is.na(GISAID_EPI_ISL)) %>% 
+  # Get the various plates)
   select(SEKV_OPPSETT_SWIFT7) %>%
   distinct() %>%
   # Create numeric column for sorting

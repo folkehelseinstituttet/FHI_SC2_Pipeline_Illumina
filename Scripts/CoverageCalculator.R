@@ -11,7 +11,7 @@ library("ggpubr")
 
 cores<-8
 input.folder<-"/home/docker/Fastq/"
-#input.folder<-"/media/nacho/Data/DockerImages/Tests/Illumina/Run640kopi/"
+#input.folder<-"/media/nacho/Data/DockerImages/Tests/Illumina/Run691_Corona_kopi_kopi/"
 
 results <-paste(input.folder, "temp/",sep = "")   
 if(!dir.exists(results)) dir.create(results)
@@ -101,8 +101,10 @@ for (i in 1:nrow(Amplicons)) {
   
 }
 
-out.agg<-aggregate(Reads~Amplicon, out, FUN=mean)
+out$ReadsN100<-out$Reads
+out$ReadsN100[which(out$ReadsN100>100)]<-100
 
+out.agg<-aggregate(Reads~Amplicon, out, FUN=mean)
 out.agg.sd<-aggregate(Reads~Amplicon, out, FUN=sd)
 out.agg$SD<-out.agg.sd$Reads
 out.agg$Amplicon<-factor(out.agg$Amplicon, levels = 
@@ -116,11 +118,27 @@ runname<-gsub("_.*","",gsub(".*/","",list.files(input.folder,full.names = TRUE, 
             theme_minimal()+
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
             ylab("Raw Number of Reads (mean)")+
-              ggtitle(paste("ArticV4 efficiency on", runname))
+              ggtitle(paste("Primer efficiency on", runname))
+            
 runid<-list.files(input.folder,full.names = TRUE, pattern = "_NextcladeAndPangolin.csv",recursive = TRUE)
-            
 ggsave(gsub("_NextcladeAndPangolin.csv","_AmpliconV4.pdf", runid), width = 12, height = 6)
-            
+
+
+out.agg<-aggregate(ReadsN100~Amplicon, out, FUN=mean)
+out.agg.sd<-aggregate(ReadsN100~Amplicon, out, FUN=sd)
+out.agg$SD<-out.agg.sd$ReadsN100
+out.agg$Amplicon<-factor(out.agg$Amplicon, levels = 
+                           unique(as.character(out.agg$Amplicon))[order(as.numeric(gsub(".*_","",unique(as.character(out.agg$Amplicon)))))])
+
+ggplot(out.agg)+
+  geom_bar(aes(Amplicon, ReadsN100), fill="red", stat = "identity")+
+  geom_errorbar(aes(y=ReadsN100, x=Amplicon, ymin=ReadsN100, ymax=ReadsN100+SD ))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ylab("Normalized-100 Number of Reads (mean)")+
+  ggtitle(paste("Primer efficiency on", runname))
+
+ggsave(gsub("_NextcladeAndPangolin.csv","_AmpliconNorm100_V4.pdf", runid), width = 12, height = 6)
             
             
 out.agg<-aggregate(Reads~Base, out, FUN=mean)
@@ -139,6 +157,22 @@ ggplot(out.agg)+
 ggsave(gsub("_NextcladeAndPangolin.csv","_Depth.pdf", runid), width = 12, height = 6)
 
 
+out.agg<-aggregate(ReadsN100~Base, out, FUN=mean)
+out.agg.sd<-aggregate(ReadsN100~Base, out, FUN=sd)
+out.agg$SD<-out.agg.sd$ReadsN100
+out.agg$ymin<-out.agg$ReadsN100-out.agg$SD
+out.agg$ymin[which(out.agg$ymin<0)]<-0
+
+ggplot(out.agg)+
+  geom_line(aes(Base, ReadsN100), colour="red")+
+  geom_ribbon(aes(Base, ReadsN100, ymax=ReadsN100+SD, ymin=ymin), alpha=0.3)+
+  theme_minimal()+
+  ylab("Normalized-100 Number of Reads (mean)")+
+  ggtitle(paste("Depth", runname))
+
+ggsave(gsub("_NextcladeAndPangolin.csv","_DepthNorm100.pdf", runid), width = 12, height = 6)
+
+
 colnames(summary)[1]<-"Sample"
 out<-merge(out, summary[,c("Sample","lineage")], by="Sample")
 out$SampleLineage<-paste(out$Sample, out$lineage, sep = " / ")
@@ -151,9 +185,15 @@ out.agg2<- aggregate(Reads~Amplicon+SampleLineage, out, median)
 out.agg2.sd<- aggregate(Reads~Amplicon+SampleLineage, out, sd)
 out.agg2$SD<-out.agg2.sd$Reads 
 
+out.agg2.n<- aggregate(ReadsN100~Amplicon+SampleLineage, out, mean)
+out.agg2.n.sd<- aggregate(ReadsN100~Amplicon+SampleLineage, out, sd)
+out.agg2.n$SD<-out.agg2.n.sd$ReadsN100 
+
+
+
 out.plots<-list()
 sample.uniq<-unique(out.agg2$SampleLineage)
-
+out.plots.norm<-list()
 for (pl in 1:length(sample.uniq)) {
   out.plots[[pl]]<-ggplot(out.agg2[which(out.agg2$SampleLineage==sample.uniq[pl]),])+
     geom_bar(aes(Amplicon, Reads), fill="red", stat = "identity")+
@@ -163,12 +203,28 @@ for (pl in 1:length(sample.uniq)) {
     ylim(0, max(out.agg2$Reads+out.agg2$SD))+
     ylab("Median Number of Reads")+
     ggtitle(sample.uniq[pl])
+  
+  out.plots.norm[[pl]]<-ggplot(out.agg2.n[which(out.agg2.n$SampleLineage==sample.uniq[pl]),])+
+    geom_bar(aes(Amplicon, ReadsN100), fill="red", stat = "identity")+
+    geom_errorbar(aes(x=Amplicon, ymin= ReadsN100, ymax=ReadsN100+SD ))+
+    theme_minimal()+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 4))+
+    ylim(0, max(out.agg2.n$ReadsN100+out.agg2.n$SD))+
+    ylab("Mean Num of N100 Reads")+
+    ggtitle(sample.uniq[pl])
+  
+  
 }
 
 if(length(out.plots)<=30 ){
   if(length(out.plots)>0){
     ggarrange(plotlist =  out.plots[1:length(out.plots)], ncol = 3, nrow = 10)
     ggsave(gsub("_NextcladeAndPangolin.csv","_Amplicon_Sample.pdf", runid), width = 16, height = 22)
+    
+    ggarrange(plotlist =  out.plots.norm[1:length(out.plots.norm)], ncol = 3, nrow = 10)
+    ggsave(gsub("_NextcladeAndPangolin.csv","_Norm100_Amp_Sample.pdf", runid), width = 16, height = 22)
+    
+    
   }  
 }else{
   plotting<-TRUE
@@ -179,11 +235,15 @@ if(length(out.plots)<=30 ){
   while(plotting){
     if(end==length(out.plots)) plotting<-FALSE
     ggarrange(plotlist =  out.plots[start:end], ncol = 3, nrow = 10)
+    ggsave(gsub("_NextcladeAndPangolin.csv", paste("_Amplicon_Sample",counter,".pdf",sep = ""), runid), width = 16, height = 22)
+    ggarrange(plotlist =  out.plots.norm[start:end], ncol = 3, nrow = 10)
+    ggsave(gsub("_NextcladeAndPangolin.csv", paste("_Norm100_Amp_Sample",counter,".pdf",sep = ""), runid), width = 16, height = 22)
+    
     start<-end+1
     end<-end+40
     if(end>=length(out.plots)) end<-length(out.plots)
     counter<-counter+1
-    ggsave(gsub("_NextcladeAndPangolin.csv", paste("_Amplicon_Sample",counter,".pdf",sep = ""), runid), width = 16, height = 22)
+   
 
     
   }
@@ -196,7 +256,10 @@ if(length(pdf.list)>1){
   pdf_combine(pdf.list, output = gsub("_.\\.pdf","_Merged.pdf",pdf.list[1]))
   file.remove(pdf.list)}
   
-
+pdf.list<-list.files(results, full.names = TRUE, pattern = "_Norm100_Amp_Sample.*\\.pdf")
+if(length(pdf.list)>1){
+  pdf_combine(pdf.list, output = gsub("_.\\.pdf","_Merged.pdf",pdf.list[1]))
+  file.remove(pdf.list)}
 
  ggplot(out)+
    geom_line(aes(Base, Reads), colour="red")+
@@ -206,4 +269,12 @@ if(length(pdf.list)>1){
  
  ggsave(gsub("_NextcladeAndPangolin.csv","_Depth_Sample.pdf", runid), width = 22, height = 16)
 
+ 
+ ggplot(out)+
+   geom_line(aes(Base, ReadsN100), colour="red")+
+   theme_minimal()+
+   ylab("N100 Num of Reads (mean)")+
+   facet_wrap(~SampleLineage)
+ 
+ ggsave(gsub("_NextcladeAndPangolin.csv","_Depth_Norm_Sample.pdf", runid), width = 22, height = 16)
  
