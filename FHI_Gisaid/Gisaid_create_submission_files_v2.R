@@ -242,16 +242,22 @@ filter_BN <- function() {
       
       oppsett_details_final <- oppsett_details
       for (x in seq_along(oppsett_details$INNSENDER)){
-        # Check INNSENDER
-        if (is.na(oppsett_details$INNSENDER[x])){
+        # Check both
+        if (is.na(oppsett_details$INNSENDER[x]) && is.na(oppsett_details$FYLKENAVN[x])){
+          log_object <- log_object %>% 
+            add_row("key" = oppsett_details$KEY[x],
+                    "comment" = "had no Innsender- and Fylke-info in BN - removed from submission")
+          # Remove from submission
+          oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+        } else if (is.na(oppsett_details$INNSENDER[x])){
+          # Check INNSENDER
           log_object <- log_object %>% 
             add_row("key" = oppsett_details$KEY[x],
                     "comment" = "had no Innsender info in BN - removed from submission")
           # Remove from submission
           oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-        }
-        # Check Fylkenavn
-        if (is.na(oppsett_details$FYLKENAVN[x])) {
+        } else if (is.na(oppsett_details$FYLKENAVN[x])) {
+          # Check Fylkenavn
           log_object <- log_object %>% 
             add_row("key" = oppsett_details$KEY[x],
                     "comment" = "had no Fylkenavn info in BN - removed from submission")
@@ -272,16 +278,22 @@ filter_BN <- function() {
     
     oppsett_details_final <- oppsett_details
     for (x in seq_along(oppsett_details$INNSENDER)){
-      # Check INNSENDER
-      if (is.na(oppsett_details$INNSENDER[x])){
+      # Check both
+      if (is.na(oppsett_details$INNSENDER[x]) && is.na(oppsett_details$FYLKENAVN[x])){
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Innsender- and Fylke-info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (is.na(oppsett_details$INNSENDER[x])){
+        # Check INNSENDER
         log_object <- log_object %>% 
           add_row("key" = oppsett_details$KEY[x],
                   "comment" = "had no Innsender info in BN - removed from submission")
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-      }
-      # Check Fylkenavn
-      if (is.na(oppsett_details$FYLKENAVN[x])) {
+      } else if (is.na(oppsett_details$FYLKENAVN[x])) {
+        # Check Fylkenavn
         log_object <- log_object %>% 
           add_row("key" = oppsett_details$KEY[x],
                   "comment" = "had no Fylkenavn info in BN - removed from submission")
@@ -289,6 +301,7 @@ filter_BN <- function() {
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       }
     }
+    
   } else if (sample_sheet$platform[i] == "Swift_FHI") {
     oppsett_details <- tmp %>%
       filter(str_detect(SEKV_OPPSETT_SWIFT7, sample_sheet$oppsett[i])) %>%
@@ -302,16 +315,22 @@ filter_BN <- function() {
     
     oppsett_details_final <- oppsett_details
     for (x in seq_along(oppsett_details$INNSENDER)){
-      # Check INNSENDER
-      if (is.na(oppsett_details$INNSENDER[x])){
+      # Check both
+      if (is.na(oppsett_details$INNSENDER[x]) && is.na(oppsett_details$FYLKENAVN[x])){
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Innsender- and Fylke-info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (is.na(oppsett_details$INNSENDER[x])){
+        # Check INNSENDER
         log_object <- log_object %>% 
           add_row("key" = oppsett_details$KEY[x],
                   "comment" = "had no Innsender info in BN - removed from submission")
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-      }
-      # Check Fylkenavn
-      if (is.na(oppsett_details$FYLKENAVN[x])) {
+      } else if (is.na(oppsett_details$FYLKENAVN[x])) {
+        # Check Fylkenavn
         log_object <- log_object %>% 
           add_row("key" = oppsett_details$KEY[x],
                   "comment" = "had no Fylkenavn info in BN - removed from submission")
