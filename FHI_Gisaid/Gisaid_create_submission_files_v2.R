@@ -263,6 +263,12 @@ filter_BN <- function() {
                     "comment" = "had no Fylkenavn info in BN - removed from submission")
           # Remove from submission
           oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+        } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
+          log_object <- log_object %>% 
+            add_row("key" = oppsett_details$KEY[x],
+                    "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
+          # Remove from submission
+          oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
         }
       }
      
@@ -297,6 +303,12 @@ filter_BN <- function() {
         log_object <- log_object %>% 
           add_row("key" = oppsett_details$KEY[x],
                   "comment" = "had no Fylkenavn info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       }
@@ -336,6 +348,12 @@ filter_BN <- function() {
                   "comment" = "had no Fylkenavn info in BN - removed from submission")
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       }
     }
     
@@ -358,6 +376,13 @@ filter_BN <- function() {
           add_row("oppsett" = oppsett_details$SEKV_OPPSETT_SWIFT7[x],
                   "key" = oppsett_details$KEY[x],
                   "comment" = "had no Fylkenavn info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
+        log_object <- log_object %>% 
+          add_row("oppsett" = oppsett_details$SEKV_OPPSETT_SWIFT7[x],
+                  "key" = oppsett_details$KEY[x],
+                  "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       }
