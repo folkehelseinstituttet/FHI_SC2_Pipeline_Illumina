@@ -239,113 +239,91 @@ filter_BN <- function() {
         filter(Dekning_Artic >=94) %>%
         mutate(SEARCH_COLUMN = RES_CDC_INFB_CT) %>%
         rename("COVERAGE" = RES_CDC_INFA_RX)
-      
-      oppsett_details_final <- oppsett_details
-      for (x in seq_along(oppsett_details$INNSENDER)){
+    } else if (sample_sheet$platform[i] == "Artic_Nanopore") {
+      oppsett_details <- tmp %>%
+        filter(str_detect(SEKV_OPPSETT_NANOPORE, sample_sheet$oppsett[i])) %>%
+        # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
+        filter(!is.na(MELDT_SMITTESPORING)) %>%
+        # Filtrer på coverage >= 94%
+        filter(Dekning_Nano >=94) %>%
+        mutate(SEARCH_COLUMN = SEQUENCEID_NANO29) %>%
+        rename("COVERAGE" = COVARAGE_DEPTH_NANO)
+    } else if (sample_sheet$platform[i] == "Swift_FHI") {
+      oppsett_details <- tmp %>%
+        filter(str_detect(SEKV_OPPSETT_SWIFT7, sample_sheet$oppsett[i])) %>%
+        # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
+        filter(!is.na(MELDT_SMITTESPORING)) %>%
+        # Filtrer på coverage >= 94%
+        filter(Dekning_Swift >=94) %>%
+        # Create column for looping through later
+        mutate(SEARCH_COLUMN = SEQUENCEID_SWIFT) %>%
+        rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
+    } else if (sample_sheet$platform[i] == "Swift_MIK") {
+      oppsett_details <- tmp %>%
+        filter(str_detect(SEKV_OPPSETT_SWIFT7, sample_sheet$oppsett[i])) %>%
+        # Filtrer på coverage >= 94%
+        filter(Dekning_Swift >=94) %>%
+        # Remove "OUS-" from Sequence ID
+        mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>%
+        # Create column for looping through later
+        mutate(SEARCH_COLUMN = SEQUENCEID_SWIFT) %>%
+        rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
+    }
+
+  # Drop samples with missing data
+  oppsett_details_final <- oppsett_details
+  if (sample_sheet$platform[i] == "Artic_Illumina" || sample_sheet$platform[i] == "Artic_Nanopore" || sample_sheet$platform[i] == "Swift_FHI") {
+    for (x in seq_along(oppsett_details$INNSENDER)){
+      if (is.na(oppsett_details$INNSENDER[x]) && is.na(oppsett_details$FYLKENAVN[x])){
+        # Check both
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Innsender- and Fylke-info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (is.na(oppsett_details$INNSENDER[x])){
         # Check INNSENDER
-        if (is.na(oppsett_details$INNSENDER[x])){
-          log_object <- log_object %>% 
-            add_row("key" = oppsett_details$KEY[x],
-                    "comment" = "had no Innsender info in BN - removed from submission")
-          # Remove from submission
-          oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-        }
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Innsender info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (is.na(oppsett_details$FYLKENAVN[x])) {
         # Check Fylkenavn
-        if (is.na(oppsett_details$FYLKENAVN[x])) {
-          log_object <- log_object %>% 
-            add_row("key" = oppsett_details$KEY[x],
-                    "comment" = "had no Fylkenavn info in BN - removed from submission")
-          # Remove from submission
-          oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had no Fylkenavn info in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
+        log_object <- log_object %>% 
+          add_row("key" = oppsett_details$KEY[x],
+                  "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
+        # Remove from submission
+        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+      } else if (sample_sheet$platform[i] == "Swift_MIK") {
+        for (x in seq_along(oppsett_details$INNSENDER)){
+          # Check Fylkenavn
+          if (is.na(oppsett_details$FYLKENAVN[x])) {
+            log_object <- log_object %>% 
+              add_row("oppsett" = oppsett_details$SEKV_OPPSETT_SWIFT7[x],
+                      "key" = oppsett_details$KEY[x],
+                      "comment" = "had no Fylkenavn info in BN - removed from submission")
+            # Remove from submission
+            oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+          } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
+            log_object <- log_object %>% 
+              add_row("oppsett" = oppsett_details$SEKV_OPPSETT_SWIFT7[x],
+                      "key" = oppsett_details$KEY[x],
+                      "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
+            # Remove from submission
+            oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+          }
         }
-      }
-     
-  } else if (sample_sheet$platform[i] == "Artic_Nanopore") {
-    oppsett_details <- tmp %>%
-      filter(str_detect(SEKV_OPPSETT_NANOPORE, sample_sheet$oppsett[i])) %>%
-      # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
-      filter(!is.na(MELDT_SMITTESPORING)) %>%
-      # Filtrer på coverage >= 94%
-      filter(Dekning_Nano >=94) %>%
-      mutate(SEARCH_COLUMN = SEQUENCEID_NANO29) %>%
-      rename("COVERAGE" = COVARAGE_DEPTH_NANO)
-    
-    oppsett_details_final <- oppsett_details
-    for (x in seq_along(oppsett_details$INNSENDER)){
-      # Check INNSENDER
-      if (is.na(oppsett_details$INNSENDER[x])){
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had no Innsender info in BN - removed from submission")
-        # Remove from submission
-        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-      }
-      # Check Fylkenavn
-      if (is.na(oppsett_details$FYLKENAVN[x])) {
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had no Fylkenavn info in BN - removed from submission")
-        # Remove from submission
-        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-      }
-    }
-  } else if (sample_sheet$platform[i] == "Swift_FHI") {
-    oppsett_details <- tmp %>%
-      filter(str_detect(SEKV_OPPSETT_SWIFT7, sample_sheet$oppsett[i])) %>%
-      # Behold bare de som er meldt smittesporing. Disse skal da være godkjent.
-      filter(!is.na(MELDT_SMITTESPORING)) %>%
-      # Filtrer på coverage >= 94%
-      filter(Dekning_Swift >=94) %>%
-      # Create column for looping through later
-      mutate(SEARCH_COLUMN = SEQUENCEID_SWIFT) %>%
-      rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
-    
-    oppsett_details_final <- oppsett_details
-    for (x in seq_along(oppsett_details$INNSENDER)){
-      # Check INNSENDER
-      if (is.na(oppsett_details$INNSENDER[x])){
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had no Innsender info in BN - removed from submission")
-        # Remove from submission
-        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-      }
-      # Check Fylkenavn
-      if (is.na(oppsett_details$FYLKENAVN[x])) {
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had no Fylkenavn info in BN - removed from submission")
-        # Remove from submission
-        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-      }
-    }
-    
-  } else if (sample_sheet$platform[i] == "Swift_MIK") {
-    oppsett_details <- tmp %>%
-      filter(str_detect(SEKV_OPPSETT_SWIFT7, sample_sheet$oppsett[i])) %>%
-      # Filtrer på coverage >= 94%
-      filter(Dekning_Swift >=94) %>%
-      # Remove "OUS-" from Sequence ID
-      mutate(SEQUENCE_ID_TRIMMED = str_remove(SEQUENCEID_SWIFT, "OUS-")) %>%
-      # Create column for looping through later
-      mutate(SEARCH_COLUMN = SEQUENCEID_SWIFT) %>%
-      rename("COVERAGE" = COVERAGE_DEPTH_SWIFT)
-    
-    oppsett_details_final <- oppsett_details
-    for (x in seq_along(oppsett_details$INNSENDER)){
-      # Check Fylkenavn
-      if (is.na(oppsett_details$FYLKENAVN[x])) {
-        log_object <- log_object %>% 
-          add_row("oppsett" = oppsett_details$SEKV_OPPSETT_SWIFT7[x],
-                  "key" = oppsett_details$KEY[x],
-                  "comment" = "had no Fylkenavn info in BN - removed from submission")
-        # Remove from submission
-        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       }
     }
   }
-  
-    return(oppsett_details_final)
+  return(oppsett_details_final)
 }
 
 # Find sequences on N: and create fasta object ----------------------------
@@ -666,7 +644,8 @@ FS <- function(fastas){
   dat2fasta(fastas, outfile = "tmp.fasta")
 
   # Run the frameshift script
-  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
+  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R",
+         ignore.stdout = TRUE)
   # system("docker run --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
 
 }
