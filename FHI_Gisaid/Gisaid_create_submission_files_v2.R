@@ -762,7 +762,12 @@ for (i in seq_along(sample_sheet$platform)) {
       metadata_final <- bind_rows(metadata_final, metadata_clean)
       fastas_final <- bind_rows(fastas_final, fastas_clean)
       # Clean up
-      file.rename("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx", paste0("/home/docker/Fastq/FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
+      if (sample_sheet$platform[i] == "Artic_Nanopore"){
+        name <- str_replace(sample_sheet$oppsett[i], "/", "_")
+        file.rename("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx", paste0("/home/docker/Fastq/FrameShift_", name, ".xlsx"))
+      } else {
+        file.rename("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx", paste0("/home/docker/Fastq/FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
+      }
     } else {
       print(paste(sample_sheet$platform[i], "is empty. Check the log"))
     }
