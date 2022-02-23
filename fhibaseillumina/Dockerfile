@@ -22,12 +22,15 @@ RUN cd /home/docker \
     && pip install . \
     && pip install seaborn \
     && pip install matplotlib\
-    && ln -s /home/docker/miniconda3/lib/libcrypto.so.1.1 /home/docker/miniconda3/lib/libcrypto.so.1.0.0
+    && ln -s /home/docker/miniconda3/lib/libcrypto.so.1.1 /home/docker/miniconda3/lib/libcrypto.so.1.0.0 \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends cmake
 
 USER root
+RUN Rscript -e "install.packages('seqinr')"
 RUN Rscript -e "install.packages(c('doSNOW', \
 'progress','foreach','parallel', 'pdftools', 'doParallel', \
-'BiocManager', 'ggplot2', 'seqinr', 'xgboost', 'reshape2', 'httr','phangorn','ggpubr' ,'ape','readxl', 'geomnet','rvest', 'tidyverse','writexl','nnet', 'stringr', 'devtools', 'pacman','phylotools','optparse'))"
+'BiocManager', 'ggplot2', 'xgboost', 'reshape2', 'httr','phangorn','ggpubr' ,'ape','readxl', 'geomnet','rvest', 'tidyverse','writexl','nnet', 'stringr', 'devtools', 'pacman','phylotools','optparse'))"
 RUN Rscript -e "devtools::install_github('sctyner/geomnet')"
 RUN Rscript -e "devtools::install_version('rvcheck',version='0.1.8')"
 RUN rm -rf /var/lib/apt/lists/* \
