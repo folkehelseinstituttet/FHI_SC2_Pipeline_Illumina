@@ -704,26 +704,6 @@ check_final_metadata <- function(metadata_clean) {
   return(log_object)
 }
 
-# Define clean up and write function --------------------------------------
-clean_up_and_write <- function(fastas_clean, metadata_clean) {
-
-  #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-  suppressMessages(try(setwd("/home/docker/Fastq/")))
-
-  if (platform == "Artic_Nanopore") {
-    oppsett_stripped <- gsub("/", "", oppsett)
-    file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
-    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett_stripped, ".xlsx"))
-    write_csv(metadata_clean, file = paste0(oppsett_stripped, ".csv"))
-    dat2fasta(fastas_clean, outfile = paste0(oppsett_stripped, ".fasta"))
-  } else {
-    file.remove(dir("Frameshift/", pattern = "csv|fasta", full.names = T))
-    file.rename("Frameshift/FrameShift_tmp.xlsx", paste0("FrameShift_", oppsett, ".xlsx"))
-    write_csv(metadata_clean, file = opt$metadata)
-    dat2fasta(fastas_clean, outfile = fasta_filename)
-  }
-}
-
 #############################################
 ## Start script
 #############################################
