@@ -15,6 +15,10 @@ sample_sheet <- read_xlsx(paste0("/home/docker/N/NGS/1-NGS-Analyser/1-Rutine/2-R
   # Remove rows starting with "#"
   filter(str_detect(platform, "^#", negate = TRUE))
 
+# Open connection to log file
+log_file <- file(paste0(Sys.Date(), ".log"), open = "a")
+
+
 # Set fixed information ------------------------------------
 type <- "betacoronavirus"
 passage <- "original"
@@ -33,13 +37,6 @@ specimen <- "Unknown"
 covv_sampling_strategy <- "Unknown"
 
 # Create empty objects to populate ----------------------------------------
-log_final <- tibble(
-  "oppsett" = character(),
-  "key" = character(),
-  "sequence_id" = character(),
-  "comment" = character()
-)
-
 metadata_final <- tibble(
   submitter = character(),
   fn  = character(),
@@ -276,53 +273,45 @@ filter_BN <- function() {
     for (x in seq_along(oppsett_details$INNSENDER)){
       if (is.na(oppsett_details$INNSENDER[x]) && is.na(oppsett_details$FYLKENAVN[x])){
         # Check both
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had no Innsender- and Fylke-info in BN - removed from submission")
+        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Innsender and no Fylke in BN - removed from submission\n"),
+            file = log_file)
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       } else if (is.na(oppsett_details$INNSENDER[x])){
         # Check INNSENDER
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had no Innsender info in BN - removed from submission")
+        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Innsender info in BN - removed from submission\n"),
+            file = log_file)
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       } else if (is.na(oppsett_details$FYLKENAVN[x])) {
         # Check Fylkenavn
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had no Fylkenavn info in BN - removed from submission")
+        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Fylkenavn info in BN - removed from submission\n"),
+            file = log_file)
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
-        log_object <- log_object %>% 
-          add_row("key" = oppsett_details$KEY[x],
-                  "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
+        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had Ukjent in Fylkenavn in BN - removed from submission\n"),
+            file = log_file)
         # Remove from submission
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
-      } else if (sample_sheet$platform[i] == "Swift_MIK") {
+      } 
+    }
+  } else if (sample_sheet$platform[i] == "Swift_MIK") {
         for (x in seq_along(oppsett_details$INNSENDER)){
           # Check Fylkenavn
           if (is.na(oppsett_details$FYLKENAVN[x])) {
-            log_object <- log_object %>% 
-              add_row("oppsett" = oppsett_details$SEKV_OPPSETT_SWIFT7[x],
-                      "key" = oppsett_details$KEY[x],
-                      "comment" = "had no Fylkenavn info in BN - removed from submission")
+            cat(paste0("oppsett: ", oppsett_details$SEKV_OPPSETT_SWIFT7[x], ", Key: ", oppsett_details$KEY[x], ", ", "had no Fylkenavn info in BN - removed from submission\n"),
+                file = log_file)
             # Remove from submission
             oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
           } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
-            log_object <- log_object %>% 
-              add_row("oppsett" = oppsett_details$SEKV_OPPSETT_SWIFT7[x],
-                      "key" = oppsett_details$KEY[x],
-                      "comment" = "had Ukjent in Fylkenavn in BN - removed from submission")
+            cat(paste0("oppsett: ", oppsett_details$SEKV_OPPSETT_SWIFT7[x], ", Key: ", oppsett_details$KEY[x], ", ", "had Ukjent in Fylkenavn in BN - removed from submission\n"),
+                file = log_file)
             # Remove from submission
             oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
           }
         }
       }
-    }
-  }
   return(oppsett_details_final)
 }
 
@@ -398,9 +387,8 @@ find_sequences <- function(platform, oppsett) {
   keep <- vector("character")
   for (y in seq_along(oppsett_details_final$SEARCH_COLUMN)){
     if (length(grep(oppsett_details_final$SEARCH_COLUMN[y], filepaths)) == 0){
-      log_object <- log_object %>% 
-        add_row("sequence_id" = oppsett_details_final$SEARCH_COLUMN[y],
-                "comment" = "had no sequence, probably wrong folder name in BN")
+      cat(paste0("sequence_id: ", oppsett_details_final$SEARCH_COLUMN[y], ", ", "had no sequence, probably wrong folder name in BN\n"),
+          file = log_file)
     } else {
       keep[y] <- filepaths[grep(oppsett_details_final$SEARCH_COLUMN[y], filepaths)] 
     }
@@ -658,12 +646,25 @@ remove_FS_fasta <- function(fastas){
   FS_OK <- read_excel("FrameShift_tmp.xlsx") %>%
     filter(Ready == "YES") %>%
     rename(`seq.name` = "Sample")
+  FS_NO <- read_excel("FrameShift_tmp.xlsx") %>%
+    filter(Ready == "YES")
 
   # Rename navn til å matche navn i fastas
   # Join fastas with FS to keep
-  fastas_clean <- left_join(FS_OK, fastas, by = "seq.name") %>%
-    select(`seq.name`, `seq.text`)
-  return(fastas_clean)
+  if (nrow(FS_OK > 0)){
+    fastas_clean <- left_join(FS_OK, fastas, by = "seq.name") %>%
+      select(`seq.name`, `seq.text`)
+    return(fastas_clean)
+  } else {
+    cat(paste0("oppsett: ", sample_sheet$oppsett[i], " had no sequences that passed the Frameshift analysis"),
+        file = log_file)
+  }
+  
+  if (nrow(FS_NO > 0)) {
+    cat(paste0("oppsett: ", sample_sheet$oppsett[i], " had", nrow(FS_NO), " sequences that did not pass the Frameshift analysis"),
+        file = log_file)
+  }
+  
 }
 
 # Remove bad FS from metadata ---------------------------------------------
@@ -682,28 +683,6 @@ remove_FS_metadata <- function(metadata){
   return(metadata_clean)
 }
 
-
-
-# Define check for empty or NA function -----------------------------------
-check_final_metadata <- function(metadata_clean) {
-  # If empty metadata
-  if (nrow(metadata_clean) == 0) {
-    log_object <- log_object %>% 
-      add_row("oppsett" = sample_sheet$oppsett[i],
-              "comment" = "Metadata had no sequences")
-  }
-  
-  # If NA in samples
-  for (j in seq_along(metadata_clean$covv_virus_name)){
-    if (is.na(metadata_clean$covv_virus_name[j])){
-      log_object <- log_object %>% 
-        add_row("oppsett" = sample_sheet$oppsett[j],
-                "comment" = "Virus name contains NAs")
-    }
-  }
-  return(log_object)
-}
-
 #############################################
 ## Start script
 #############################################
@@ -711,14 +690,9 @@ check_final_metadata <- function(metadata_clean) {
 # Start script ------------------------------------------------------------
 for (i in seq_along(sample_sheet$platform)) {
   print(paste("Processing", sample_sheet$oppsett[i]))
-  
-  # Create empty log
-  log_object <- tibble(
-    "oppsett" = character(),
-    "key" = character(),
-    "sequence_id" = character(),
-    "comment" = character()
-  )
+  # Remove old objects
+  suppressWarnings(rm(metadata_clean))
+  suppressWarnings(rm(fastas_clean))
 
   #### Trekke ut prøver ####
   oppsett_details_final <- filter_BN()
@@ -731,9 +705,22 @@ for (i in seq_along(sample_sheet$platform)) {
     fastas <- find_sequences(sample_sheet$platform[i], sample_sheet$oppsett[i])
     
     #### Run Frameshift analysis ####
-    FS(fastas)
+    if (nrow(fastas) > 0) {
+      FS(fastas)
+    } else {
+      cat(paste0("No fastas found for oppsett ", sample_sheet$oppsett[i]),
+          file = log_file)
+    }
+    
     fastas_clean <- remove_FS_fasta(fastas)
-    metadata_clean <- remove_FS_metadata(metadata)
+    
+    if (exists("fastas_clean")){
+      metadata_clean <- remove_FS_metadata(metadata)
+    }
+    
+  } else {
+    cat(paste0("Oppsett: ", sample_sheet$oppsett[i], " had no samples to submit\n"),
+        file = log_file)
   }
   
   # Join final metadata and fastas with final objects
@@ -741,31 +728,27 @@ for (i in seq_along(sample_sheet$platform)) {
     if (nrow(metadata_clean) > 0){
       metadata_final <- bind_rows(metadata_final, metadata_clean)
       fastas_final <- bind_rows(fastas_final, fastas_clean)
-      # Clean up
+      # Clean up files
       if (sample_sheet$platform[i] == "Artic_Nanopore"){
         name <- str_replace(sample_sheet$oppsett[i], "/", "_")
         file.rename("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx", paste0("/home/docker/Fastq/FrameShift_", name, ".xlsx"))
       } else {
         file.rename("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx", paste0("/home/docker/Fastq/FrameShift_", sample_sheet$oppsett[i], ".xlsx"))
       }
-    } else {
-      print(paste(sample_sheet$platform[i], "is empty. Check the log"))
-    }
+    } 
   }
-  
-  # Update the log
-  log_final <- bind_rows(log_final, log_object)
+
 }
   
 # Write final objects
 #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
 suppressMessages(try(setwd("/home/docker/Fastq/")))
 
-if (exists("metadata_final")){
+if (nrow(metadata_final) > 0){
   dat2fasta(fastas_final, outfile = paste0(Sys.Date(), ".fasta"))
   write_csv(metadata_final, file = paste0(Sys.Date(), ".csv"))
-  write_csv(log_final, file = paste0(Sys.Date(), ".log"))
 } else {
-  print("Nothing to save")
+  print("Nothing to save. Check the log file")
 }
 
+close(log_file)
