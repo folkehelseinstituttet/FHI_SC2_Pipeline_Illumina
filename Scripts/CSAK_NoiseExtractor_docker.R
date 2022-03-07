@@ -74,9 +74,10 @@ if(length(bamfiles)>0){
     
     try(rm(dummy), silent = TRUE)
     try(dummy<-read.csv(results.files[i],sep = "\t", header = FALSE), silent = TRUE)
+    summary$Sample[i]<-gsub(".*/","",results.files[i])
     if(exists("dummy")){
       colnames(dummy)<-c("Base","Noise","Reads","Seq1")
-      summary$Sample[i]<-gsub(".*/","",results.files[i])
+      
       outlier.co<- max(median(dummy$Noise)+10*sd(dummy$Noise),0.10)
       summary$OCO<-outlier.co
       genome.position<-as.data.frame(c(1:29903))
@@ -125,7 +126,7 @@ if(length(bamfiles)>0){
   try(rm(df))
   extended.out<-as.data.frame(extended.out)
   colnames(extended.out)[ncol(extended.out)]<-"Sample"
-  df<-merge(summary, extended.out, by="Sample")
+  df<-merge(summary, extended.out, by="Sample", all.x=TRUE)
   
   df[,-1]<-apply(df[,-1],2,as.numeric)
   try(rm(pred))
@@ -168,6 +169,10 @@ if(length(bamfiles)>0){
       
     }
   }
+  
+  if(length(which(is.na(summary$Class)))>0) summary$Status[which(is.na(summary$Class))]<-"FAIL"
+  if(length(which(is.na(summary$Class)))>0) summary$Class[which(is.na(summary$Class))]<-"ERROR"
+  
   summary$Sample<-gsub("_tanoti.*","",gsub(".sorted_NoisExtractorResult.tsv","",summary$Sample))
   write_xlsx(summary, paste(results,"ResultsNoisExtractor_v1_",date,".xlsx", sep=""))
  library("pdftools")
