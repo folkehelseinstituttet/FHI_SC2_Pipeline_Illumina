@@ -1,7 +1,6 @@
 FROM garcianacho/fhibase:v1
 LABEL maintainer="Nacho Garcia <iggl@fhi.no>"
 
-USER docker
 RUN cd /home/docker \
     && wget \
     https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
@@ -17,15 +16,17 @@ RUN cd /home/docker \
     && conda update -n base -c defaults conda \
     && conda install -c bioconda bedtools \
     && conda install -c bioconda nextalign \
-    && conda install -c bioconda -c conda-forge -c defaults pangolin \
+    && git clone https://github.com/cov-lineages/pangolin \
+    && cd pangolin \
+    && conda env create -f environment.yml \
+    && pip install . \
     && pip install seaborn \
     && pip install matplotlib\
     && ln -s /home/docker/miniconda3/lib/libcrypto.so.1.1 /home/docker/miniconda3/lib/libcrypto.so.1.0.0 \
-    && conda update pangolin
+    && apt-get update \
+    && apt-get install -y --no-install-recommends cmake
 
 USER root
-RUN  apt-get update \
-     && apt-get install -y --no-install-recommends cmake
 RUN Rscript -e "install.packages('seqinr')"
 RUN Rscript -e "install.packages(c('doSNOW', \
 'progress','foreach','parallel', 'pdftools', 'doParallel', \
