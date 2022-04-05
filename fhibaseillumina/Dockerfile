@@ -17,11 +17,14 @@ RUN cd /home/docker \
     && conda update -n base -c defaults conda \
     && conda install -c bioconda bedtools \
     && conda install -c bioconda nextalign \
-    && conda install -c bioconda -c conda-forge -c defaults pangolin \
+    && conda create -n pangolin \
     && pip install seaborn \
     && pip install matplotlib\
-    && ln -s /home/docker/miniconda3/lib/libcrypto.so.1.1 /home/docker/miniconda3/lib/libcrypto.so.1.0.0 \
-    && conda update pangolin
+    && ln -s /home/docker/miniconda3/lib/libcrypto.so.1.1 /home/docker/miniconda3/lib/libcrypto.so.1.0.0    
+
+RUN /bin/bash -c ". activate pangolin && \
+    conda install -c bioconda -c conda-forge -c defaults pangolin && \
+    conda update -y pangolin"
 
 USER root
 RUN  apt-get update \

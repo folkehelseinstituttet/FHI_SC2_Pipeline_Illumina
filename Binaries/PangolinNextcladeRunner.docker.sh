@@ -12,10 +12,10 @@ echo "name2,coverage_breath" > header_file.csv
 cat header_file.csv data_file2.csv > coverage.csv
 
 
-#source activate pangolin
-conda update pangolin
+source activate pangolin
+pangolin --update
 pangolin ./${runname}.fa -t 8 --outfile ./${runname}_pangolin_out.csv
-#conda deactivate
+conda deactivate
 
 nextclade --input-fasta /home/docker/Fastq/${runname}.fa  --output-csv /home/docker/Fastq/${runname}_Nextclade.results.csv
 

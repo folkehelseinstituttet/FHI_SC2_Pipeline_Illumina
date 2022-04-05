@@ -355,11 +355,10 @@ cd "${basedir}"
 ####### Index filer i IGV-mappen ##### SLUTT #####
 
 ####### Pangolin og Nextclade  ##### START #####
-#source activate pangolin #Added 10Nov2021 for UShER
-conda update pangolin
+source activate pangolin #Added 10Nov2021 for UShER
+pangolin --update
 pangolin ${basedir}/${runname}_summaries/fasta/${runname}.fa -t 8 --outfile ${basedir}/${runname}_summaries/${runname}_pangolin_out.csv 
-
-#conda deactivate #Added 10Nov2021 for UShER
+conda deactivate #Added 10Nov2021 for UShER
 
 nextclade --input-fasta ${basedir}/${runname}_summaries/fasta/${runname}.fa --output-csv ${basedir}/${runname}_summaries/${runname}_Nextclade.results.csv
 nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --reference=/home/docker/CommonFiles/reference_nc.fasta \
