@@ -44,3 +44,10 @@ RUN rm -rf /var/lib/apt/lists/* \
 RUN Rscript -e "BiocManager::install(c('msa','GenomicAlignments','ggtree'))"
 RUN Rscript -e "install.packages('lubridate')"
 RUN mkdir -p /home/docker/Scripts /home/docker/Data /home/docker/CommonFiles /home/docker/Fastq /home/docker/Binaries
+
+USER docker
+RUN pip install seaborn \
+    && pip install matplotlib \
+    && pip install pysam
+
+USER root
