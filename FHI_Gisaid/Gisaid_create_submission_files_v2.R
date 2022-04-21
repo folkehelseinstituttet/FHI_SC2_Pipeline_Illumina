@@ -629,7 +629,7 @@ FS <- function(fastas){
   #suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # dat2fasta(fastas, outfile = "/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift/tmp.fasta")
 
-  dat2fasta(fastas, outfile = "/home/docker/Fastq/Frameshift/tmp.fasta")
+  dat2fasta(fastas, outfile = "tmp.fasta")
 
   # Run the frameshift script
   system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R",
