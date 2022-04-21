@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 #############################################
-## Maintaned by Jon Bråte - jon.brate@fhi.no
+## Maintained by Jon Bråte - jon.brate@fhi.no
 ## This script creates Gisaid submission files for SARS-CoV-2 samples stored at NIPH servers.
 #############################################
 
