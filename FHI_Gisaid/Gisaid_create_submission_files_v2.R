@@ -632,7 +632,7 @@ FS <- function(fastas){
   dat2fasta(fastas, outfile = "tmp.fasta")
 
   # Run the frameshift script
-  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R",
+  system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R c10",
          ignore.stdout = TRUE)
   # system("docker run --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R")
 
