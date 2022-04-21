@@ -626,10 +626,10 @@ FS <- function(fastas){
   #### Run Frameshift analysis ####
   # write temporary fasta file to Frameshift folder
   #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
-  suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
+  #suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # dat2fasta(fastas, outfile = "/home/jonr/FHI_SC2_Pipeline_Illumina/Frameshift/tmp.fasta")
 
-  dat2fasta(fastas, outfile = "tmp.fasta")
+  dat2fasta(fastas, outfile = "/home/docker/Fastq/Frameshift/tmp.fasta")
 
   # Run the frameshift script
   system("Rscript --vanilla /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R",
@@ -642,11 +642,11 @@ FS <- function(fastas){
 remove_FS_fasta <- function(fastas){
   #### Remove any samples with bad FS ####
   #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
-  suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
-  FS_OK <- read_excel("FrameShift_tmp.xlsx") %>%
+  #suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
+  FS_OK <- read_excel("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx") %>%
     filter(Ready == "YES") %>%
     rename(`seq.name` = "Sample")
-  FS_NO <- read_excel("FrameShift_tmp.xlsx") %>%
+  FS_NO <- read_excel("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx") %>%
     filter(Ready == "YES")
 
   # Rename navn til å matche navn i fastas
@@ -671,9 +671,9 @@ remove_FS_fasta <- function(fastas){
 remove_FS_metadata <- function(metadata){
   #### Drop the same samples from the metadata file #####
   #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/Frameshift/")))
-  suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
+  #suppressMessages(try(setwd("/home/docker/Fastq/Frameshift")))
   # Define samples to keep (i.e. with OK FS)
-  FS_OK <- read_excel("FrameShift_tmp.xlsx") %>%
+  FS_OK <- read_excel("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx") %>%
     filter(Ready == "YES") %>%
     rename("covv_virus_name" = "Sample")
 
@@ -742,11 +742,11 @@ for (i in seq_along(sample_sheet$platform)) {
   
 # Write final objects
 #suppressMessages(try(setwd("/home/jonr/tmp_gisaid/")))
-suppressMessages(try(setwd("/home/docker/Fastq/")))
+#suppressMessages(try(setwd("/home/docker/Fastq/")))
 
 if (nrow(metadata_final) > 0){
-  dat2fasta(fastas_final, outfile = paste0(Sys.Date(), ".fasta"))
-  write_csv(metadata_final, file = paste0(Sys.Date(), ".csv"))
+  dat2fasta(fastas_final, outfile = paste0("/home/docker/Fastq/", Sys.Date(), ".fasta"))
+  write_csv(metadata_final, file = paste0("/home/docker/Fastq/", Sys.Date(), ".csv"))
 } else {
   print("Nothing to save. Check the log file")
 }
