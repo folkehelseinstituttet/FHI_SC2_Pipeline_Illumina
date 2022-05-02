@@ -18,6 +18,9 @@ pangolin ./${runname}.fa -t 8 --outfile ./${runname}_pangolin_out.csv
 conda deactivate
 
 nextclade --input-fasta /home/docker/Fastq/${runname}.fa  --output-csv /home/docker/Fastq/${runname}_Nextclade.results.csv
+nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --reference=/home/docker/CommonFiles/reference_nc.fasta \
+ --genemap=/home/docker/CommonFiles/genemap.gff --genes=E,M,N,ORF1a,ORF1b,ORF3a,ORF6,ORF7a,ORF7b,ORF8,ORF9b,S --output-dir=${basedir} --output-basename=${runname}
+Rscript /home/docker/Scripts/InsertionAnalysis.R
 
 nextclade_output_converter.py ${runname}_Nextclade.results.csv >> ${runname}_Nextclade.results2.csv
 awk -F ',' '{print $1 "," $2 "," $4}' ${runname}_pangolin_out.csv > pangolin_out.csv
