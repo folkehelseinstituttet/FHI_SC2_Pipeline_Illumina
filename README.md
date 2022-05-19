@@ -1,4 +1,6 @@
-# FHI's SARS-CoV-2 Illumina Pipeline
+# FHI's SARS-CoV-2 Illumina Pipeline V13
+:warning: V12 is stil accesible via dockerhub: garcianacho/fhisc2:IlluminaV12
+
 Bioinformatic pipeline for SARS-CoV-2 sequence analysis used at the [Folkehelseinstituttet](https://www.fhi.no)
 
 ## Description
@@ -21,10 +23,10 @@ Alternativetly, it is posible to *pull* updated builds from [Dockerhub](https://
 
 ## Running the pipeline
 *ArticV4:*   
-<code>docker run -it --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina SARS-CoV-2_Illumina_Docker_V12.sh ArticV4</code>    
+<code>docker run -it --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina SARS-CoV-2_Illumina_Docker_V13.sh ArticV4</code>    
    
 *ArticV3:*   
-<code>docker run -it --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina SARS-CoV-2_Illumina_Docker_V12.sh ArticV3</code>
+<code>docker run -it --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina SARS-CoV-2_Illumina_Docker_V13.sh ArticV3</code>
 
 *Note that older versions of docker might require the flag --privileged and that multiuser systems might require the flag -u 1000 to run*
 
