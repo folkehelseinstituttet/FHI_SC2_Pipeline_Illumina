@@ -366,7 +366,10 @@ cp ${basedir}/${runname}_summaries/${runname}_pangolin_out.csv ${runname}_summar
 nextclade --input-fasta ${basedir}/${runname}_summaries/fasta/${runname}.fa --output-csv ${basedir}/${runname}_summaries/${runname}_Nextclade.results.csv
 nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --reference=/home/docker/CommonFiles/reference_nc.fasta \
  --genemap=/home/docker/CommonFiles/genemap.gff --genes=E,M,N,ORF1a,ORF1b,ORF3a,ORF6,ORF7a,ORF7b,ORF8,ORF9b,S --output-dir=${basedir} --output-basename=${runname}
+
 Rscript /home/docker/Scripts/SpikeMissing.R
+
+Rscript /home/docker/Scripts/InsertionAnalysis.R
 cp ${basedir}/${runname}_summaries/fasta/${runname}_Nextclade.results.csv ${basedir}/${runname}_summaries/PreSummaries/
 mv ${basedir}/${runname}_summaries/fasta/${runname}_Nextclade.results.csv ${basedir}/${runname}_summaries/
 mv /home/docker/Fastq/MissingAA.Spike.xlsx ${basedir}/${runname}_summaries/${runname}_MissingAA.Spike.xlsx
