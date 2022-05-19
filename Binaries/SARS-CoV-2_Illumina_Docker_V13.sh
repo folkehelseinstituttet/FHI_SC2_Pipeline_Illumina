@@ -293,6 +293,7 @@ runname=${runname%.xlsx}
 mkdir "${runname}_summaries"
 mkdir "${runname}_summaries/fasta"
 mkdir "${runname}_summaries/bam"
+mkdir "${runname}_summaries/PreSummaries"
 #mkdir "./${runname}_IGV_bam_filer"
 #mkdir "./${runname}_summaries/Konsensus-sekvenser"
 
@@ -360,18 +361,24 @@ pangolin --update
 pangolin ${basedir}/${runname}_summaries/fasta/${runname}.fa -t 8 --outfile ${basedir}/${runname}_summaries/${runname}_pangolin_out.csv 
 conda deactivate #Added 10Nov2021 for UShER
 
+cp ${basedir}/${runname}_summaries/${runname}_pangolin_out.csv ${runname}_summaries/PreSummaries/
+
 nextclade --input-fasta ${basedir}/${runname}_summaries/fasta/${runname}.fa --output-csv ${basedir}/${runname}_summaries/${runname}_Nextclade.results.csv
 nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --reference=/home/docker/CommonFiles/reference_nc.fasta \
  --genemap=/home/docker/CommonFiles/genemap.gff --genes=E,M,N,ORF1a,ORF1b,ORF3a,ORF6,ORF7a,ORF7b,ORF8,ORF9b,S --output-dir=${basedir} --output-basename=${runname}
 Rscript /home/docker/Scripts/SpikeMissing.R
+cp ${basedir}/${runname}_summaries/fasta/${runname}_Nextclade.results.csv ${basedir}/${runname}_summaries/PreSummaries/
 mv ${basedir}/${runname}_summaries/fasta/${runname}_Nextclade.results.csv ${basedir}/${runname}_summaries/
 mv /home/docker/Fastq/MissingAA.Spike.xlsx ${basedir}/${runname}_summaries/${runname}_MissingAA.Spike.xlsx
 cd "${basedir}/${runname}_summaries/"
 
 nextclade_output_converter.py ${runname}_Nextclade.results.csv >> ${runname}_Nextclade.results2.csv
 
+cp ./${runname}_Nextclade.results2.csv ${basedir}/${runname}_summaries/PreSummaries/${runname}_Nextclade.results2.csv
+
 awk -F ',' '{print $1 "," $2 "," $4}' ${runname}_pangolin_out.csv > pangolin_out.csv
 awk -F ';' '{print $1 "," $2}' ${runname}_Nextclade.results.csv > nextclade_out2.csv
+
 
 cat nextclade_out2.csv | sed "s/, /\//g" > nextclade_out3.csv && mv nextclade_out3.csv nextclade_out2.csv #ny fra 22.06.21 Kamilla&Nacho
 
@@ -384,6 +391,9 @@ cat nextclade_out2.csv | sed "s/, /\//g" > nextclade_out3.csv && mv nextclade_ou
 
 paste -d, ${runname}_Nextclade.results2_sorted.csv pangolin_out_sorted.csv > NextcladeAndPangolin.out.csv
 paste -d, NextcladeAndPangolin.out.csv nextclade.out2_sorted.csv > NextcladeAndPangolin.out2.csv
+
+cp ./NextcladeAndPangolin.out.csv ${basedir}/${runname}_summaries/PreSummaries/
+cp ./NextcladeAndPangolin.out2.csv ${basedir}/${runname}_summaries/PreSummaries/
 
 sed 's/,/\t/g' NextcladeAndPangolin.out2.csv | sed 's/ORF10/ORF10\t/g' > ${runname}_NextcladeAndPangolin.csv
 
@@ -413,27 +423,63 @@ mkdir Frameshift
 cp ${basedir}/${runname}_summaries/fasta/${runname}.fa Frameshift
 cd Frameshift
 Rscript /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R c8
-mv *.xlsx ${basedir}/${runname}_summaries/
+rm ${basedir}/${runname}_summaries/Frameshift/${runname}.fa
 cd ..
-rm -rf Frameshift
 
 cd "${basedir}"
 Rscript /home/docker/Scripts/CSAK_QCPlotter_docker.R
 
+#Recombinants
+cd "${basedir}/${runname}_summaries/"
+mkdir Recombinants
+cp ${basedir}/${runname}_summaries/fasta/${runname}.fa /Inference
+cp /home/docker/CommonFiles/RecombinantModel/* /Models/RecombinantModel
+Rscript /home/docker/Scripts/Inference_PrecFinder.R RecombinantModel
+cp /Inference/* ${basedir}/${runname}_summaries/Recombinants/
+rm ${basedir}/${runname}_summaries/Recombinants/${runname}.fa
+rm ${basedir}/${runname}_summaries/Recombinants/inference_dataset.csv
+
+#Coinfections
+cd "${basedir}/${runname}_summaries/"
+mkdir Coinfections
+cp ${basedir}/${runname}_summaries/bam/*.bam* /Noise
+Rscript /home/docker/Scripts/MajorMinorIllumina.R
+cp /Noise/Coinfection_Results* ${basedir}/${runname}_summaries/Coinfections/
+
 Rscript /home/docker/Scripts/CoronaTree.R
 mv *aligned.fasta ${basedir}/${runname}_summaries/
 
-mv /home/docker/Fastq/Tree.pdf ${basedir}/${runname}_summaries/${runname}_tree.pdf
+mv /home/docker/Fastq/Tree.pdf ${basedir}/${runname}_summaries/Coinfections/${runname}_tree.pdf
 Rscript /home/docker/Scripts/CoverageCalculator.R
 
+#Amplicon Organization & cleaning up
+cd "${basedir}/${runname}_summaries/"
+mkdir AmpliconQC
+mv *_Norm100* AmpliconQC
+mv *Depth* AmpliconQC
+mv *_Amplicon* AmpliconQC
 
 rm /home/docker/Fastq/*.fasta
 rm /home/docker/Fastq/*.csv
 rm /home/docker/Fastq/primers.bed
 rm -r /home/docker/Fastq/temp/
 
+mkdir Coinfections/rawnoise
+mv ${basedir}/${runname}_summaries/bam/rawnoise/* ${basedir}/${runname}_summaries/Coinfections/rawnoise
+mv ${basedir}/${runname}_summaries/bam/ResultsNoisExtractor* ${basedir}/${runname}_summaries/Coinfections
+mv ${basedir}/${runname}_summaries/bam/ResultsNoisExtractor* ${basedir}/${runname}_summaries/Coinfections
+
+rm -rf ${basedir}/${runname}_summaries/bam/rawnoise/
+mv ${basedir}/${runname}_summaries/${runname}_summaries.csv ${basedir}/${runname}_summaries/PreSummaries/
+mv ${basedir}/${runname}_summaries/${runname}_NextcladeAndPangolin.csv ${basedir}/${runname}_summaries/PreSummaries/
+mv ${basedir}/${runname}_summaries/${runname}_summaries_and_Pangolin.csv ${basedir}/${runname}_summaries/PreSummaries/
+mv ${basedir}/${runname}_summaries/${runname}_MissingAA.Spike.xlsx ${basedir}/${runname}_summaries/AmpliconQC
+
+mv ${basedir}/${runname}_summaries/${runname}.aligned.fasta ${basedir}/${runname}_summaries/fasta/
+mv ${basedir}/${runname}_summaries/${runname}.fa_Spike.fa ${basedir}/${runname}_summaries/fasta/
 ##
 rm $CoronaRef
 rm $PrimerBed
 rm ${CoronaRef}.fai
 rm /home/docker/Fastq/Rplots.pdf
+rm ${basedir}/${runname}_summaries/Rplots.pdf

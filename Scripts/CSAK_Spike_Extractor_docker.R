@@ -29,6 +29,10 @@ if(length(args)==0){
   sequences.aln<-list()
   pb<-txtProgressBar(min = 1, max = length(sequences), initial = 1)
   for (i in 1:(length(sequences)-1)) {
+    
+    coverage<-length(unlist(base::strsplit(as.character(sequences[[i]]),""))[which(toupper(unlist(base::strsplit(as.character(sequences[[i]]),""))) %in% c("A","T","C","G")) ])/
+      29903
+    if(coverage>0.5){
     setTxtProgressBar(pb, i)    
     seqs.to.aln<-sequences[c(i, grep("Spike", names(sequences)))]
     alignment<-msa(seqs.to.aln, "Muscle")
@@ -46,7 +50,7 @@ if(length(args)==0){
     
     sequences.aln[[i]]<-Aligned.samples
     names(sequences.aln)[i]<-names(DNAStr)[-grep("Spike", names(DNAStr))]
-    
+    }
   }
   write.fasta(sequences = sequences.aln, names = paste(names(sequences.aln),"_Spike",sep = ""),
               paste(result.folder,args[1],"_Spike.fa",sep = ""))

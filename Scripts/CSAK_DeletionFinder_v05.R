@@ -38,7 +38,7 @@ DeletionFinder<-function(reference = "/home/docker/CommonFiles/nCoV-2019.referen
   
   #Deletion of samples with less than 10 nucleotides
   test.length<-read.fasta(total.fasta)
-f.length<-as.numeric(lapply(test, length))
+f.length<-as.numeric(lapply(test.length, length))
 if(length(which(f.length<10))>0){
   test.length<-test.length[-which(f.length<10)] 
   write.fasta(test.length, paste(total.fasta,"_clean.fasta", sep = ""),names =names(test.length) )
