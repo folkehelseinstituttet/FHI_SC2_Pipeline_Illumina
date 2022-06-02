@@ -16,12 +16,6 @@ Docker-based solution for sequence analysis of SARS-CoV-2 Illumina samples
 <code> cd FHI_SC2_Pipeline_Illumina </code>   
 <code> docker build -t garcianacho/fhisc2:Illumina . </code>
  
-*Note that building the image for the first time can take up to two hours.* 
- 
-Alternativetly, it is posible to *pull* updated builds from [Dockerhub](https://hub.docker.com/repository/docker/garcianacho/fhisc2):
-
-<code>docker pull garcianacho/fhisc2:Illumina</code>
-
 ## Running the pipeline
 *ArticV4:*   
 <code>docker run -it --rm -v $(pwd):/home/docker/Fastq garcianacho/fhisc2:Illumina SARS-CoV-2_Illumina_Docker_V13.sh ArticV4</code>    
@@ -49,13 +43,14 @@ The script expects the following folder structure where the *fastq.gz* files are
 
 </pre>
    
-
 The script also expects a *.xlsx* file, that contains information about the position of the samples on a 96-well-plate and the DNA concentration (alternatively this column can be used for the Ct-values).
 If the file is not properly formated the script will run without errors but the Quality-control plot will not be generated or it will contain errors. 
 Note that the script takes the name of the experiment from the name of the xlsx file. If the file is not found the names of the output files might be incorrect. 
 It is possible to download a template of the xlsx file [here](https://github.com/garcia-nacho/FHI_SC2_Pipeline_Illumina/blob/master/Template_FHISC2_Illumina.xlsx?raw=true)
 
 ## Outputs
+:point_right: (V13)-Identification of recombinants (see [Precfinder](https://github.com/garcia-nacho/Precfinder) for details)   
+:point_right: (V13)-Identification of contaminants (see [Precfinder](https://github.com/garcia-nacho/Precfinder) for details)
 -Summary including mutations found, pangolin lineage, number of reads, coverage, depth, etc...   
 -Bam files   
 -Consensus sequences   

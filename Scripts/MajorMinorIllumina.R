@@ -124,16 +124,10 @@ if(length(bamfiles)>0){
     S1.df<-df[which(df$Sample=="S1"),c("lineage","conflict","note","ID")]
     S2.df<-df[which(df$Sample=="S2"),c("lineage","conflict","note","ID")]
     
-    colnames(S1.df)[-4]<-paste("S1_",colnames(S1.df)[-4], sep = "")
-    colnames(S2.df)[-4]<-paste("S2_",colnames(S2.df)[-4], sep = "")
+    colnames(S1.df)[-4]<-paste("Major_",colnames(S1.df)[-4], sep = "")
+    colnames(S2.df)[-4]<-paste("Minor_",colnames(S2.df)[-4], sep = "")
     
     total<-merge(S1.df, S2.df, by="ID")
-    total<-total[,c("ID", "S1_lineage", "S2_lineage")]
-    colnames(total)<-c("Sample", "Major", "Minor")
-    
-    if(length(which(total$Major==total$Minor))>0){
-      total<-total[-which(total$Major==total$Minor),]
-    }
     
     if(nrow(total)>0) write.csv(total, paste("/Noise/Coinfection_Results", date,".csv",sep=""), row.names = FALSE)
     if(nrow(total)==0) write.table("No Coinfections Found!",paste("/Noise/Coinfection_Results", date,".csv",sep=""), row.names = FALSE, quote = FALSE, col.names = FALSE)

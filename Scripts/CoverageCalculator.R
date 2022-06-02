@@ -11,7 +11,6 @@ library("ggpubr")
 
 cores<-8
 input.folder<-"/home/docker/Fastq/"
-#input.folder<-"/media/nacho/Data/DockerImages/Tests/Illumina/Run691_Corona_kopi_kopi/"
 
 results <-paste(input.folder, "temp/",sep = "")   
 if(!dir.exists(results)) dir.create(results)
@@ -63,7 +62,9 @@ pb<-txtProgressBar(min = 1, max = length(results), initial = 1)
 try(rm(out))
 for (i in 1:length(results)) {
   setTxtProgressBar(pb, i)
-  dummy<-read.csv(results[i],sep = "\t", header = FALSE)
+  try(rm(dummy))
+  try(dummy<-read.csv(results[i],sep = "\t", header = FALSE))
+  if(exists("dummy")){
   dummy<-dummy[,c(1:3)]
   colnames(dummy)<-c("Base","Noise","Reads")
   genome.position<-as.data.frame(c(1:29903))
@@ -78,7 +79,7 @@ for (i in 1:length(results)) {
   }else{
     out<-rbind(out,dummy)
   }
-  
+  }
 }
 
 primers$Amplicon<-NA

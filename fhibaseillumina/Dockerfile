@@ -52,4 +52,8 @@ RUN pip install seaborn \
     && conda install nextflow \
     && Rscript -e "keras::install_keras()"
 
+RUN conda create -n nextclade
+RUN /bin/bash -c ". activate nextclade && \
+    conda install -c bioconda nextclade"
+
 USER root

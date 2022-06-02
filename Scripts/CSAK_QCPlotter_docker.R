@@ -29,6 +29,7 @@ Plate<- list.files(input.folder, pattern = ".*\\.xlsx", full.names = TRUE, recur
 if(length(Plate[grep("FrameShift",Plate)])==1) Plate<-Plate[-grep("FrameShift",Plate)]
 if(length(Plate[grep("NoisExtractor",Plate)])==1) Plate<-Plate[-grep("NoisExtractor",Plate)]
 if(length(Plate[grep("MissingAA.Spike.xlsx",Plate)])==1) Plate<-Plate[-grep("MissingAA.Spike.xlsx",Plate)]
+if(length(Plate[grep("Recombinant",Plate)])>0) Plate<-Plate[-grep("Recombinant",Plate)]
  
 
 Plate<-read_xlsx(Plate, skip = 2)

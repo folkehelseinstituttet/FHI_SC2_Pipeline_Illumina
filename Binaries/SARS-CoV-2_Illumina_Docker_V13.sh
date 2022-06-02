@@ -369,9 +369,17 @@ nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --ref
 
 Rscript /home/docker/Scripts/SpikeMissing.R
 
+mkdir nextcladenew
+cp  ${basedir}/${runname}_summaries/fasta/${runname}.fa nextcladenew  
+source activate nextclade
+nextclade dataset get --name 'sars-cov-2' --output-dir '/home/docker/nc_sars-cov-2'
+nextclade --input-fasta nextcladenew/${runname}.fa --input-dataset /home/docker/nc_sars-cov-2 --output-csv nextcladenew/${runname}_Nextclade.new.results.csv
+conda deactivate
+cp nextcladenew/${runname}_Nextclade.new.results.csv ${runname}_summaries/PreSummaries/
+rm -rf nextcladenew
+
 Rscript /home/docker/Scripts/InsertionAnalysis.R
-cp ${basedir}/${runname}_summaries/fasta/${runname}_Nextclade.results.csv ${basedir}/${runname}_summaries/PreSummaries/
-mv ${basedir}/${runname}_summaries/fasta/${runname}_Nextclade.results.csv ${basedir}/${runname}_summaries/
+cp ${basedir}/${runname}_summaries/${runname}_Nextclade.results.csv ${basedir}/${runname}_summaries/PreSummaries/
 mv /home/docker/Fastq/MissingAA.Spike.xlsx ${basedir}/${runname}_summaries/${runname}_MissingAA.Spike.xlsx
 cd "${basedir}/${runname}_summaries/"
 
@@ -383,22 +391,24 @@ awk -F ',' '{print $1 "," $2 "," $4}' ${runname}_pangolin_out.csv > pangolin_out
 awk -F ';' '{print $1 "," $2}' ${runname}_Nextclade.results.csv > nextclade_out2.csv
 
 
-cat nextclade_out2.csv | sed "s/, /\//g" > nextclade_out3.csv && mv nextclade_out3.csv nextclade_out2.csv #ny fra 22.06.21 Kamilla&Nacho
+#cat nextclade_out2.csv | sed "s/, /\//g" > nextclade_out3.csv && mv nextclade_out3.csv nextclade_out2.csv #ny fra 22.06.21 Kamilla&Nacho
 
-#(head -n 2 pangolin_out.csv && tail -n +3 pangolin_out.csv | sort) > pangolin_out_sorted.csv
-(head -n 1 pangolin_out.csv && tail -n +2 pangolin_out.csv | sort) > pangolin_out_sorted.csv
-#(head -n 2 nextclade_out2.csv && tail -n +3 nextclade_out2.csv | sort) > nextclade.out2_sorted.csv
-(head -n 1 nextclade_out2.csv && tail -n +2 nextclade_out2.csv | sort) > nextclade.out2_sorted.csv
-(head -n 1 ${runname}_Nextclade.results2.csv && tail -n +2 ${runname}_Nextclade.results2.csv | sort) > ${runname}_Nextclade.results2_sorted.csv
-#(head -n 2 ${runname}_Nextclade.results2.csv && tail -n +3 ${runname}_Nextclade.results2.csv | sort) > ${runname}_Nextclade.results2_sorted.csv
+##(head -n 2 pangolin_out.csv && tail -n +3 pangolin_out.csv | sort) > pangolin_out_sorted.csv
+#(head -n 1 pangolin_out.csv && tail -n +2 pangolin_out.csv | sort) > pangolin_out_sorted.csv
+##(head -n 2 nextclade_out2.csv && tail -n +3 nextclade_out2.csv | sort) > nextclade.out2_sorted.csv
+#(head -n 1 nextclade_out2.csv && tail -n +2 nextclade_out2.csv | sort) > nextclade.out2_sorted.csv
+#(head -n 1 ${runname}_Nextclade.results2.csv && tail -n +2 ${runname}_Nextclade.results2.csv | sort) > ${runname}_Nextclade.results2_sorted.csv
+##(head -n 2 ${runname}_Nextclade.results2.csv && tail -n +3 ${runname}_Nextclade.results2.csv | sort) > ${runname}_Nextclade.results2_sorted.csv
 
-paste -d, ${runname}_Nextclade.results2_sorted.csv pangolin_out_sorted.csv > NextcladeAndPangolin.out.csv
-paste -d, NextcladeAndPangolin.out.csv nextclade.out2_sorted.csv > NextcladeAndPangolin.out2.csv
+#paste -d, ${runname}_Nextclade.results2_sorted.csv pangolin_out_sorted.csv > NextcladeAndPangolin.out.csv
+#paste -d, NextcladeAndPangolin.out.csv nextclade.out2_sorted.csv > NextcladeAndPangolin.out2.csv
 
-cp ./NextcladeAndPangolin.out.csv ${basedir}/${runname}_summaries/PreSummaries/
-cp ./NextcladeAndPangolin.out2.csv ${basedir}/${runname}_summaries/PreSummaries/
+Rscript /home/docker/Scripts/NC_Pango_merger.R
 
-sed 's/,/\t/g' NextcladeAndPangolin.out2.csv | sed 's/ORF10/ORF10\t/g' > ${runname}_NextcladeAndPangolin.csv
+cp /home/docker/Fastq/NextcladeAndPangolin.out2.csv ${basedir}/${runname}_summaries/PreSummaries/${runname}_NextcladeAndPangolin.bk.csv
+mv /home/docker/Fastq/NextcladeAndPangolin.out2.csv ./${runname}_NextcladeAndPangolin.csv
+
+#sed 's/,/\t/g' NextcladeAndPangolin.out2.csv | sed 's/ORF10/ORF10\t/g' > ${runname}_NextcladeAndPangolin.csv
 
 rm *results*
 rm *out*
@@ -474,13 +484,15 @@ mv ${basedir}/${runname}_summaries/bam/ResultsNoisExtractor* ${basedir}/${runnam
 
 rm -rf ${basedir}/${runname}_summaries/bam/rawnoise/
 mv ${basedir}/${runname}_summaries/${runname}_summaries.csv ${basedir}/${runname}_summaries/PreSummaries/
-mv ${basedir}/${runname}_summaries/${runname}_NextcladeAndPangolin.csv ${basedir}/${runname}_summaries/PreSummaries/
+rm ${basedir}/${runname}_summaries/${runname}_NextcladeAndPangolin.csv
 mv ${basedir}/${runname}_summaries/${runname}_summaries_and_Pangolin.csv ${basedir}/${runname}_summaries/PreSummaries/
 mv ${basedir}/${runname}_summaries/${runname}_MissingAA.Spike.xlsx ${basedir}/${runname}_summaries/AmpliconQC
 
 mv ${basedir}/${runname}_summaries/${runname}.aligned.fasta ${basedir}/${runname}_summaries/fasta/
 mv ${basedir}/${runname}_summaries/${runname}.fa_Spike.fa ${basedir}/${runname}_summaries/fasta/
 ##
+rm ${basedir}/${runname}_summaries/Recombinants/Inference_dataset.csv
+rm ${basedir}/${runname}_summaries/Frameshift/*.fasta
 rm $CoronaRef
 rm $PrimerBed
 rm ${CoronaRef}.fai
