@@ -369,6 +369,11 @@ nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --ref
 
 Rscript /home/docker/Scripts/SpikeMissing.R
 
+cp ${basedir}/*aligned.fasta  ${basedir}/${runname}_summaries/fasta/
+mv ${basedir}/*aligned.fasta /home/docker/Fastq/MultifastaForSpike.fasta
+Rscript /home/docker/Scripts/SpikeExtractorv2.R
+cp /home/docker/Fastq/Spike_Aligned.fa ${basedir}/${runname}_summaries/fasta/${runname}_Spike.fa
+
 mkdir nextcladenew
 cp  ${basedir}/${runname}_summaries/fasta/${runname}.fa nextcladenew  
 source activate nextclade
@@ -420,9 +425,9 @@ echo "Pangolin og Nextclade ferdig"
 ####### Ekstrahere Spike fra fasta-sekvens #######	START ######
 #input spike ref og fasta-fil
 
-cd "${basedir}/${runname}_summaries/fasta"
+#cd "${basedir}/${runname}_summaries/fasta"
 
-Rscript /home/docker/Scripts/CSAK_Spike_Extractor_docker.R "${runname}.fa"
+#Rscript /home/docker/Scripts/CSAK_Spike_Extractor_docker.R "${runname}.fa"
 
 ####### Ekstrahere Spike fra fasta-sekvens #######	SLUTT ######
 
@@ -460,7 +465,8 @@ Rscript /home/docker/Scripts/MajorMinorIllumina.R
 cp /Noise/Coinfection_Results* ${basedir}/${runname}_summaries/Coinfections/
 
 Rscript /home/docker/Scripts/CoronaTree.R
-mv *aligned.fasta ${basedir}/${runname}_summaries/
+mv *aligned.fasta ${basedir}/${runname}_summaries/fasta
+
 
 mv /home/docker/Fastq/Tree.pdf ${basedir}/${runname}_summaries/Coinfections/${runname}_tree.pdf
 Rscript /home/docker/Scripts/CoverageCalculator.R
@@ -488,7 +494,6 @@ rm ${basedir}/${runname}_summaries/${runname}_NextcladeAndPangolin.csv
 mv ${basedir}/${runname}_summaries/${runname}_summaries_and_Pangolin.csv ${basedir}/${runname}_summaries/PreSummaries/
 mv ${basedir}/${runname}_summaries/${runname}_MissingAA.Spike.xlsx ${basedir}/${runname}_summaries/AmpliconQC
 
-mv ${basedir}/${runname}_summaries/${runname}.aligned.fasta ${basedir}/${runname}_summaries/fasta/
 mv ${basedir}/${runname}_summaries/${runname}.fa_Spike.fa ${basedir}/${runname}_summaries/fasta/
 ##
 rm ${basedir}/${runname}_summaries/Recombinants/Inference_dataset.csv
