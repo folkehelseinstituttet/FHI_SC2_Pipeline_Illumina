@@ -1,5 +1,6 @@
 # FHI's SARS-CoV-2 Illumina Pipeline V13
-![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
+![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)   
+   
 Version 13 of the bioinformatic pipeline for SARS-CoV-2 sequence analysis used at the [Folkehelseinstituttet](https://www.fhi.no)    
    
 :warning: V12 is still accesible via dockerhub: garcianacho/fhisc2:IlluminaV12
