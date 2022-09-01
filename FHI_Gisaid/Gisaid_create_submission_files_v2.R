@@ -642,7 +642,7 @@ remove_FS_fasta <- function(fastas){
     filter(Ready == "YES") %>%
     rename(`seq.name` = "Sample")
   FS_NO <- read_excel("/home/docker/Fastq/Frameshift/FrameShift_tmp.xlsx") %>%
-    filter(Ready == "YES")
+    filter(Ready == "NO")
 
   # Rename navn til å matche navn i fastas
   # Join fastas with FS to keep
@@ -656,6 +656,9 @@ remove_FS_fasta <- function(fastas){
   }
   
   if (nrow(FS_NO > 0)) {
+    frameshift <- FS_NO %>% pull(Sample)
+    cat(paste0("in oppsett: ", sample_sheet$oppsett[i], " these sequences had frameshift: ", frameshift),
+        file = log_file)    
     cat(paste0("oppsett: ", sample_sheet$oppsett[i], " had", nrow(FS_NO), " sequences that did not pass the Frameshift analysis"),
         file = log_file)
   }
