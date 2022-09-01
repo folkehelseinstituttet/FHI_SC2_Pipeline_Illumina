@@ -60,7 +60,9 @@ BN %>%
   separate(SAMPLE_CATEGORY, into = c(NA, "tmp"), sep = "/", remove = FALSE) %>% 
   mutate("tmp" = as.numeric(tmp)) %>% 
   arrange(desc(tmp)) %>% 
-  select(SAMPLE_CATEGORY) %>% View("Artic_Illumina")
+  select(SAMPLE_CATEGORY) %>% 
+  distinct() %>%
+  View("Artic_Illumina")
 
 # Check Nanopore
 BN %>%
