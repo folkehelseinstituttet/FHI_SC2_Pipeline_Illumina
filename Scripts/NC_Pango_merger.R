@@ -19,5 +19,6 @@ ncpango<-merge(nc, pango[,c("name","lineage","version","pangolin_version","taxon
 colnames(nc.new)[1]<-"name"
 try(nc.new$clade<-paste(nc.new$clade, nc.new$Nextclade_pango,sep = "/"))
 ncpango<-merge(ncpango, nc.new[,c("name", "clade")], by="name", all=TRUE)
-
+#Including technology
+ncpango$Technology<-"Illumina"
 write.table(ncpango, "/home/docker/Fastq/NextcladeAndPangolin.out2.csv", sep = "\t", quote = FALSE, row.names = FALSE)
