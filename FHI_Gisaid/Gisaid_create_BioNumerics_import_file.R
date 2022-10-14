@@ -13,7 +13,7 @@ to_BN_OUS <- gisaid_md %>%
          "Platform" = `Sequencing technology`)
 
 write.csv(to_BN_OUS, 
-          file = "/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/2022.02.01_MIK_batch_import.csv",
+          file = "/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/BN-import-filer/2022.02.01_MIK_batch_import.csv",
           quote = TRUE,
           row.names = FALSE)
 
@@ -34,6 +34,6 @@ to_BN_rest <- gisaid_md %>%
          "Platform" = `Sequencing technology`)
 
 write.csv(to_BN_rest, 
-          file = "/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/2022.02.01_BN_batch_import.csv",
+          file = "/mnt/N/Virologi/NGS/1-NGS-Analyser/1-Rutine/2-Resultater/SARS-CoV-2/4-GISAIDsubmisjon/BN-import-filer/2022.02.01_BN_batch_import.csv",
           quote = TRUE,
           row.names = FALSE)
