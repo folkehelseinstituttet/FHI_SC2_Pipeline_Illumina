@@ -1,3 +1,4 @@
+
 nc.file<-list.files("/home/docker/Fastq/", pattern ="Nextclade.results2.csv", full.names = TRUE, recursive=TRUE)
 nc.new.file<-list.files("/home/docker/Fastq/", pattern ="Nextclade.new.results.csv", full.names = TRUE, recursive=TRUE)
 pango.file<-list.files("/home/docker/Fastq/", pattern ="_pangolin_out.csv", full.names = TRUE, recursive=TRUE)
@@ -22,3 +23,4 @@ ncpango<-merge(ncpango, nc.new[,c("name", "clade")], by="name", all=TRUE)
 #Including technology
 ncpango$Technology<-"Illumina"
 write.table(ncpango, "/home/docker/Fastq/NextcladeAndPangolin.out2.csv", sep = "\t", quote = FALSE, row.names = FALSE)
+

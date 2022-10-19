@@ -377,8 +377,13 @@ cp /home/docker/Fastq/Spike_Aligned.fa ${basedir}/${runname}_summaries/fasta/${r
 mkdir nextcladenew
 cp  ${basedir}/${runname}_summaries/fasta/${runname}.fa nextcladenew  
 source activate nextclade
+
 nextclade dataset get --name 'sars-cov-2' --output-dir '/home/docker/nc_sars-cov-2'
 nextclade --input-fasta nextcladenew/${runname}.fa --input-dataset /home/docker/nc_sars-cov-2 --output-csv nextcladenew/${runname}_Nextclade.new.results.csv
+cp /home/docker/nc_sars-cov-2/tag.json /home/docker/ncv.json
+ncdb=$(grep "tag" /home/docker/ncv.json | cut -d ":" -f2-)
+
+ncv=$(nextclade -v)
 conda deactivate
 cp nextcladenew/${runname}_Nextclade.new.results.csv ${runname}_summaries/PreSummaries/
 rm -rf nextcladenew
@@ -446,7 +451,7 @@ cd ..
 
 cd "${basedir}"
 Rscript /home/docker/Scripts/CSAK_QCPlotter_docker.R
-
+Rscript /home/docker/Scripts/LW.file.generator.R ${ncdb} ${ncv}
 #Recombinants
 cd "${basedir}/${runname}_summaries/"
 mkdir Recombinants
@@ -473,6 +478,7 @@ Rscript /home/docker/Scripts/CoverageCalculator.R
 
 #Amplicon Organization & cleaning up
 cd "${basedir}/${runname}_summaries/"
+
 mkdir AmpliconQC
 mv *_Norm100* AmpliconQC
 mv *Depth* AmpliconQC
