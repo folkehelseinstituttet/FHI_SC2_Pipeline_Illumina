@@ -1,6 +1,6 @@
 #LW preparation Illumina
 args=commandArgs(TRUE)
-input<-list.files("/home/docker/Fastq/", pattern ="_summaries_and_Pangolin.*", full.names = TRUE, recursive=TRUE)
+input<-list.files("/home/docker/Fastq/", pattern ="_summaries_and_Pangolin_Noise.csv", full.names = TRUE, recursive=TRUE)
 
 
 results<-read.csv(input, sep = "\t")
