@@ -5,8 +5,8 @@ input<-list.files("/home/docker/Fastq/", pattern ="_summaries_and_Pangolin_Noise
 
 results<-read.csv(input, sep = "\t")
 
-results$Pangolin_full<- gsub(",.*","",gsub("Alias of ","",results$description))
-results$Pangolin_full[grep(" ",results$Pangolin_full)]<-NA
+#results$Pangolin_full<- gsub(",.*","",gsub("Alias of ","",results$description))
+#results$Pangolin_full[grep(" ",results$Pangolin_full)]<-NA
 
 colnames(results)[which(colnames(results)=="pangolin_version")]<-"pangolin_SW_version"
 colnames(results)[which(colnames(results)=="version")]<-"pangolin_version"

@@ -451,6 +451,7 @@ cd ..
 
 cd "${basedir}"
 Rscript /home/docker/Scripts/CSAK_QCPlotter_docker.R
+Rscript /home/docker/Scripts/LongPangolinParser.R
 Rscript /home/docker/Scripts/LW.file.generator.R ${ncdb} ${ncv}
 #Recombinants
 cd "${basedir}/${runname}_summaries/"
