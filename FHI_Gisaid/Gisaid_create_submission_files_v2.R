@@ -90,6 +90,9 @@ tmp <- BN %>%
   mutate("FYLKENAVN" = str_replace(FYLKENAVN, "M\xf8re", "More")) %>%
   # Endre Sør
   mutate("FYLKENAVN" = str_replace(FYLKENAVN, "S\xf8r", "Sor")) %>%
+  # Change "Ukjent" in FYLKENAVN to NA
+  mutate("FYLKENAVN" = na_if(FYLKENAVN, "Ukjent")) %>% 
+  mutate("FYLKENAVN" = na_if(FYLKENAVN, "ukjent")) %>% 
   # Fix date format
   mutate("PROVE_TATT" = ymd(PROVE_TATT)) %>%
   # Drop samples witout collection date
@@ -273,10 +276,10 @@ filter_BN <- function() {
     for (x in seq_along(oppsett_details$INNSENDER)){
       if (is.na(oppsett_details$INNSENDER[x]) && is.na(oppsett_details$FYLKENAVN[x])){
         # Check both
-        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Innsender and no Fylke in BN - removed from submission\n"),
+        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Innsender and no Fylke in BN\n"),
             file = log_file)
         # Remove from submission
-        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+        #oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       } else if (is.na(oppsett_details$INNSENDER[x])){
         # Check INNSENDER
         cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Innsender info in BN - removed from submission\n"),
@@ -285,10 +288,10 @@ filter_BN <- function() {
         oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       } else if (is.na(oppsett_details$FYLKENAVN[x])) {
         # Check Fylkenavn
-        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Fylkenavn info in BN - removed from submission\n"),
+        cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had no Fylkenavn info in BN\n"),
             file = log_file)
         # Remove from submission
-        oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+        #oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
       } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
         cat(paste0("Key: ", oppsett_details$KEY[x], ", ", "had Ukjent in Fylkenavn in BN - removed from submission\n"),
             file = log_file)
@@ -300,15 +303,15 @@ filter_BN <- function() {
         for (x in seq_along(oppsett_details$INNSENDER)){
           # Check Fylkenavn
           if (is.na(oppsett_details$FYLKENAVN[x])) {
-            cat(paste0("oppsett: ", oppsett_details$SEKV_OPPSETT_SWIFT7[x], ", Key: ", oppsett_details$KEY[x], ", ", "had no Fylkenavn info in BN - removed from submission\n"),
+            cat(paste0("oppsett: ", oppsett_details$SEKV_OPPSETT_SWIFT7[x], ", Key: ", oppsett_details$KEY[x], ", ", "had no Fylkenavn info in BN\n"),
                 file = log_file)
             # Remove from submission
-            oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+            #oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
           } else if (str_detect(oppsett_details$FYLKENAVN[x], "kjent")) {
-            cat(paste0("oppsett: ", oppsett_details$SEKV_OPPSETT_SWIFT7[x], ", Key: ", oppsett_details$KEY[x], ", ", "had Ukjent in Fylkenavn in BN - removed from submission\n"),
+            cat(paste0("oppsett: ", oppsett_details$SEKV_OPPSETT_SWIFT7[x], ", Key: ", oppsett_details$KEY[x], ", ", "had Ukjent in Fylkenavn in BN\n"),
                 file = log_file)
             # Remove from submission
-            oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
+            #oppsett_details_final <- oppsett_details_final[-grep(oppsett_details$KEY[x], oppsett_details_final$KEY),]
           }
         }
       }
