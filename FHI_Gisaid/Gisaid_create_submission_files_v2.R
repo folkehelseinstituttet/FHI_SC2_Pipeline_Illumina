@@ -34,7 +34,6 @@ covv_provider_sample_id <- "Unknown"
 covv_last_vaccinated <- "Unknown"
 covv_treatment <- "Unknown"
 specimen <- "Unknown"
-covv_sampling_strategy <- "Unknown"
 
 # Create empty objects to populate ----------------------------------------
 metadata_final <- tibble(
@@ -531,7 +530,13 @@ create_metadata <- function(oppsett_details_final) {
 
   metadata <- oppsett_details_final %>%
     # Lage kolonne for "year"
-    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE)
+    separate(PROVE_TATT, into = c("Year", NA, NA), sep = "-", remove = FALSE) %>% 
+    # Add info on sentinel sample (Fyrtårn)
+    mutate("covv_sampling_strategy" = case_when(
+              P == "1" ~ "Sentinel surveillance (ARI)",
+              P != "1" ~ "Unknown"
+          )
+    )
 
   if (sample_sheet$platform[i] == "Swift_MIK") {
     metadata <- metadata %>%
@@ -578,8 +583,7 @@ create_metadata <- function(oppsett_details_final) {
                  "covv_add_location" = covv_add_location,
                  "covv_provider_sample_id" = covv_provider_sample_id,
                  "covv_last_vaccinated" = covv_last_vaccinated,
-                 "covv_treatment" = covv_treatment,
-                 "covv_sampling_strategy" = covv_sampling_strategy) %>%
+                 "covv_treatment" = covv_treatment) %>%
       # Beholde endelige kolonner og rekkefølge
       select("submitter",
              "fn",
