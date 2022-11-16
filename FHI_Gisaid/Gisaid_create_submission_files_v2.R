@@ -46,6 +46,7 @@ metadata_final <- tibble(
   covv_location = character(),
   covv_host = character(),
   covv_gender = character(),
+  covv_sampling_strategy = character(),
   covv_patient_age = character(),
   covv_patient_status = character(),
   covv_specimen = character(), 
