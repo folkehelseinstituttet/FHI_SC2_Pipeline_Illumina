@@ -39,6 +39,7 @@ paste -d, NextcladeAndPangolin.out2.csv coverage2.csv > NextcladeAndPangolinAndC
 
 sed 's/,/\t/g' NextcladeAndPangolinAndCoverage.csv | sed 's/ORF10/ORF10\t/g' > ${runname}_NextcladeAndPangolin.csv
 
+Rscript /home/docker/Scripts/LongPangolinParser2.R
 
 rm *results*
 rm *out*
