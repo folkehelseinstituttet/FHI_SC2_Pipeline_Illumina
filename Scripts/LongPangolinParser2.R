@@ -1,4 +1,4 @@
-input<-list.files("/home/docker/Fastq/", pattern ="_NextcladeAndPangolin.csv", full.names = TRUE, recursive=TRUE)
+input<-list.files( pattern ="*_NextcladeAndPangolin.csv", full.names = TRUE, recursive=TRUE)
 results<-read.csv(input, sep = "\t")
 
 pango.vars<-read.csv("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json", sep = ":", header = FALSE)
