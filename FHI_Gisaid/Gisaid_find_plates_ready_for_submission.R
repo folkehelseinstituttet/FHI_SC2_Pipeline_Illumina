@@ -84,13 +84,14 @@ BN %>%
   # Remove a wrong entry
   filter(SEKV_OPPSETT_NANOPORE != "Nr227/705") %>% 
   # Create columns for sorting
-  mutate("tmp" = str_remove(SEKV_OPPSETT_NANOPORE, "/Nano")) %>% 
+  separate(SEKV_OPPSETT_NANOPORE, into = c("tmp"), sep = "/", remove = FALSE) %>% 
   mutate("tmp" = str_remove(tmp, "Nr")) %>% 
+  mutate("tmp" = str_remove(tmp, "A|B")) %>% 
   mutate("tmp" = str_remove(tmp, "/Midnight")) %>% 
-  mutate("tmp" = as.numeric(str_remove(tmp, "A|B"))) %>% 
+  mutate(tmp = as.numeric(tmp)) %>% 
   arrange(desc(tmp)) %>% 
   select(SEKV_OPPSETT_NANOPORE) %>% 
-  View()
+  View("Nanopore")
 
 # Check MIK
 BN %>%
