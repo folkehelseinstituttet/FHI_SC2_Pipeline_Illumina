@@ -109,4 +109,8 @@ BN %>%
   # Get the various plates
   select(SEKV_OPPSETT_SWIFT7) %>%
   distinct() %>%
+  # Create numeric column for sorting
+  mutate("tmp" = as.numeric(str_remove(SEKV_OPPSETT_SWIFT7, "MIK"))) %>% 
+  arrange(desc(tmp)) %>% 
+  select(SEKV_OPPSETT_SWIFT7) %>% 
   View("Swift_MIK")
