@@ -2,7 +2,7 @@
 basedir=/home/docker/Fastq
 runname=${1%/}
 runname=${runname##/*/}
-
+cd /home/docker/Fastq/
 cat /home/docker/mountingpoint/*.fa*  > /home/docker/Fastq/${runname}.fa
 
 #RefLength=29903
@@ -14,11 +14,11 @@ cat header_file.csv data_file2.csv > coverage.csv
 
 source activate pangolin
 pangolin --update
-pangolin ./${runname}.fa -t 8 --outfile ./${runname}_pangolin_out.csv
+pangolin ${runname}.fa -t 8 --outfile ${runname}_pangolin_out.csv
 conda deactivate
 
 nextclade --input-fasta /home/docker/Fastq/${runname}.fa  --output-csv /home/docker/Fastq/${runname}_Nextclade.results.csv
-nextalign  --sequences=${basedir}/${runname}_summaries/fasta/${runname}.fa --reference=/home/docker/CommonFiles/reference_nc.fasta \
+nextalign  --sequences=/home/docker/Fastq/${runname}.fa --reference=/home/docker/CommonFiles/reference_nc.fasta \
  --genemap=/home/docker/CommonFiles/genemap.gff --genes=E,M,N,ORF1a,ORF1b,ORF3a,ORF6,ORF7a,ORF7b,ORF8,ORF9b,S --output-dir=${basedir} --output-basename=${runname}
 Rscript /home/docker/Scripts/InsertionAnalysis.R
 
