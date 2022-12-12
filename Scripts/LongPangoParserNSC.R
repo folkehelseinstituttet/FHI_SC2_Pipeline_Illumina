@@ -1,6 +1,6 @@
 
 
-file.vec<-list.files(pattern = "\\.tsv")
+file.vec<-list.files(pattern = "report.*\\.tsv")
 
 #pangolin_ivar_lineage
 
