@@ -26,6 +26,8 @@ to_BN_rest <- gisaid_md %>%
   separate(`Virus name`, into = c(NA, NA, "Key", "year"), sep = "/") %>%
   # Left pad the Key with zeroes to a total of 5 digits
   mutate("Key" = str_pad(Key, width = 5, side = c("left"), pad = "0")) %>% 
+  # Replace "-" with "_" in Key
+  mutate(Key = str_replace(Key, "-", "_")) %>% 
   add_column("nr" = 25) %>% 
   mutate("year" = str_sub(year, 3, 4)) %>% 
   unite("tmp", c(nr, year, Key), sep = "") %>% 
