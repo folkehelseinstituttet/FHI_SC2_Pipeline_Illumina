@@ -5,17 +5,21 @@ library("readxl")
   
   args<-"/home/docker/Fastq"
   
+  
   files <- list.files(args[1],full.names = TRUE,recursive = FALSE)
   dirs <- list.dirs(args[1], full.names = TRUE,recursive = FALSE) 
   dirs <- list.dirs(dirs, full.names = TRUE,recursive = FALSE) 
   dirs <- dirs[grep("Oppsett", dirs)]
-  df<- read_excel(files[grep(".xlsx", files)])
+  df<- read_excel(files[grep(".xlsx$", files)])
   colnames(df)<-df[1,]
   df<-df[-1,]
   letter<-unlist(str_split(dirs,""))
   letter<-letter[-grep("/",letter)]
   letter<-toupper(letter[length(letter)])
   oppsettname<-gsub(".*/","",dirs)
+  
+  if(length(grep(".csv$", files))<1){
+  
   if(!"Kommentar" %in% names(df)){
   
   if(letter=="A") row.to.get<-c(which(df[,1]=="A1"):which(df[,1]=="H3"))
@@ -31,7 +35,12 @@ library("readxl")
     if(letter=="D") row.to.get<-grep("Flowcell 4", df$Kommentar)
     
   }
-  
+  }else{
+    
+    if(letter=="A") row.to.get<-c(1:48)
+    if(letter=="B") row.to.get<-c(49:96)
+    
+  }
   #Changes to use Barcode instead Labware#
   df<-df[row.to.get,c("Barcode","SequenceID")]
   
