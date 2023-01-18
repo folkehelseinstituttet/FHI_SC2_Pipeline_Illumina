@@ -1,12 +1,22 @@
-
+#!/usr/bin/env Rscript
 
 file.vec<-list.files(pattern = "report.*\\.tsv")
 
+nc<-list.files(pattern = "Nextclade.new.results.csv")
+if(length(nc)>0){ 
+  nc.table<-read.csv(nc, sep = ";",stringsAsFactors = FALSE)
+  nc.table<-nc.table[,c("seqName","clade_who")]
+  colnames(nc.table)<-c("Name", "who.name")
+  nc.table$Name<-gsub("_.*","", nc.table$Name)
+   
+}
 #pangolin_ivar_lineage
 
 for (i in 1:length(file.vec) ) {
   input<-file.vec[i]
   results<-read.csv(input, sep = "\t")
+  
+  if(length(which(colnames(results)=="Pangolin_full"))==0){
   
   pango.vars<-read.csv("https://raw.githubusercontent.com/cov-lineages/pango-designation/master/pango_designation/alias_key.json", sep = ":", header = FALSE)
   
@@ -36,6 +46,12 @@ for (i in 1:length(file.vec) ) {
     results$Pangolin_full<- gsub(",.*","",gsub("Alias of ","",results$description))
     results$Pangolin_full[grep(" ",results$Pangolin_full)]<-NA  
   }
+  }
+  if(length(nc)>0){
+    results<-merge(results,nc.table, by="Name", all.x = TRUE)
+  }
+  
   
   write.table(results, input , sep = "\t", quote = FALSE, row.names = FALSE)
+  print(paste("Adding Full Pangolin to",input))
 }
