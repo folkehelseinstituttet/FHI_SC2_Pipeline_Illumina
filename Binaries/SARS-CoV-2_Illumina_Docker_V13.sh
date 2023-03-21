@@ -56,7 +56,7 @@ fi
 if [ ${1} == "ArticV3" ]; then
 cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3/SARS-CoV-2.primer.bed /home/docker/Fastq/primers.bed
 STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed"
-primer_version="${STR:65:4}"
+primer_version="${STR:65:2}"
 
 fi
 
