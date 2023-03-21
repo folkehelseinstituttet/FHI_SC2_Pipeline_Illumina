@@ -39,7 +39,7 @@ runname=${runname%.xlsx}
 
 cd /home/docker/Fastq
 
-if [ ${1} == "ArticV3" ]; then
+if [ ${1} == "ArticV3.2" ]; then
 cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3.2/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed
 STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3.2/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed"
 primer_version="${STR:65:4}"
@@ -49,6 +49,13 @@ fi
 if [ ${1} == "ArticV4" ]; then
 cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4.1/SARS-CoV-2.primer.bed /home/docker/Fastq/primers.bed
 STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V4.1/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed"
+primer_version="${STR:65:4}"
+
+fi
+
+if [ ${1} == "ArticV3" ]; then
+cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3/SARS-CoV-2.primer.bed /home/docker/Fastq/primers.bed
+STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed"
 primer_version="${STR:65:4}"
 
 fi
