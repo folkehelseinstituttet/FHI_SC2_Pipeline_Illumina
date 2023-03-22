@@ -155,7 +155,7 @@ do
     cd ${dir}
     bestF4=$(ls *_sorted.bam)
 #trim
-    ivar trim -i ${bestF4} -b ${PrimerBed} -p ${bestF4%_sorted.bam}.trimmed -m 50 -q 15 -s 4 > ${bestF4%_sorted.bam}.TrimReport.txt #brukt forslag fra manual
+    ivar trim -i ${bestF4} -b ${PrimerBed} -p ${bestF4%_sorted.bam}.trimmed -m 50 -q 15 -s 4 -e > ${bestF4%_sorted.bam}.TrimReport.txt #brukt forslag fra manual
     
     samtools view -bS ${bestF4%_sorted.bam}.trimmed.bam | samtools sort -o ${bestF4%_sorted.bam}.trimmed.sorted.bam
     samtools index ${bestF4%_sorted.bam}.trimmed.sorted.bam
