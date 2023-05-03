@@ -117,7 +117,7 @@ String2=85
 
 ######## DEL 1 Mapping #### START ######
 
-for dir in $(ls -d */)
+for dir in $(ls -d *SC2/)
 do
     cd ${dir}
 
@@ -176,7 +176,7 @@ echo "###################"
 
 cd "${basedir}"
 
-for dir in $(ls -d */)
+for dir in $(ls -d *SC2/)
 do
 
 cd ${dir}
@@ -232,7 +232,7 @@ done
 cd "${basedir}"
 
 # Går inn i hver mappe og identifiserer ulike parametere og legger det inn i en csv fil 
-for dir in $(ls -d */)
+for dir in $(ls -d *SC2/)
 do
     cd ${dir}
 #identify & log
@@ -304,7 +304,7 @@ mkdir "${runname}_summaries/PreSummaries"
 #mkdir "./${runname}_IGV_bam_filer"
 #mkdir "./${runname}_summaries/Konsensus-sekvenser"
 
-for dir in $(ls -d */)
+for dir in $(ls -d *SC2/)
 do
 
 	cp ${dir}/*_summary.csv "./${runname}_summaries/"
