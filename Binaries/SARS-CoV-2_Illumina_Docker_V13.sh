@@ -446,25 +446,38 @@ echo "Pangolin og Nextclade ferdig"
 ##QC-plot/Noise_extractor/csv_merger
 cd "${basedir}/${runname}_summaries/"
 
+echo "CSAK CSV MERGER"
 Rscript /home/docker/Scripts/CSAK_csv_merger_Illumina_docker.R
+
+echo "NOISE EXTRATCTOR"
 Rscript /home/docker/Scripts/CSAK_NoiseExtractor_docker.R c8
 
 mkdir Frameshift
 cp ${basedir}/${runname}_summaries/fasta/${runname}.fa Frameshift
 cd Frameshift
+
+echo "FRAMESHIFT FINDER"
 Rscript /home/docker/Scripts/CSAK_Frameshift_Finder_docker.R c8
 rm ${basedir}/${runname}_summaries/Frameshift/${runname}.fa
 cd ..
 
 cd "${basedir}"
+
+echo "QCPLOTTER"
 Rscript /home/docker/Scripts/CSAK_QCPlotter_docker.R
+
+echo "LONG  PANGOLIN PHRASER"
 Rscript /home/docker/Scripts/LongPangolinParser.R
+
+echo "LW_FILE"
 Rscript /home/docker/Scripts/LW.file.generator.R ${ncdb} ${ncv}
 #Recombinants
 cd "${basedir}/${runname}_summaries/"
 mkdir Recombinants
 cp ${basedir}/${runname}_summaries/fasta/${runname}.fa /Inference
 cp /home/docker/CommonFiles/RecombinantModel/* /Models/RecombinantModel
+
+echo "PRECFINDER"
 Rscript /home/docker/Scripts/Inference_PrecFinder.R RecombinantModel
 cp /Inference/* ${basedir}/${runname}_summaries/Recombinants/
 rm ${basedir}/${runname}_summaries/Recombinants/${runname}.fa
@@ -474,14 +487,19 @@ rm ${basedir}/${runname}_summaries/Recombinants/inference_dataset.csv
 cd "${basedir}/${runname}_summaries/"
 mkdir Coinfections
 cp ${basedir}/${runname}_summaries/bam/*.bam* /Noise
+
+echo "MAJOR MINOR ILLUMINA"
 Rscript /home/docker/Scripts/MajorMinorIllumina.R
 cp /Noise/Coinfection_Results* ${basedir}/${runname}_summaries/Coinfections/
 
+echo "CORONA TREE"
 Rscript /home/docker/Scripts/CoronaTree.R
 mv *aligned.fasta ${basedir}/${runname}_summaries/fasta
 
 
 mv /home/docker/Fastq/Tree.pdf ${basedir}/${runname}_summaries/Coinfections/${runname}_tree.pdf
+
+echo "COVERAGE CALCULATOR"
 Rscript /home/docker/Scripts/CoverageCalculator.R
 
 #Amplicon Organization & cleaning up
