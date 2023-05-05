@@ -33,12 +33,18 @@ colnames(pangolin.table)[which(colnames(pangolin.table)=="Lineage")]<-"lineage" 
   if(warning.pango) df.pango$`most common countries`<-paste("OUTDATED:", df.pango$`most common countries`)
   
   df.summ<-read.csv(csvs[grep(".*summaries.csv$", csvs)], sep = "\t")
+
+  df.pango$name<-gsub("/.*","",df.pango$name) #Illumina fix
+  df.summ<- df.summ[-grep("i,a,", df.summ[,2]),] #Illumina fix
+  
   df.summ<-t(df.summ)
   colnames(df.summ)<-df.summ[1,]
   df.summ<-as.data.frame(df.summ)
   df.summ<-df.summ[-1,]
   df.summ$name<-rownames(df.summ)
-  #colnames(df.pango)[which(colnames(df.pango)=="taxon")]<-"name" #Updated 20May2021
+  
+  df.summ$name<-gsub("^X", "", df.summ$name) #Illumina fix
+  if(length(grep("\\.SC2",df.summ$name))>0) df.summ$name<-gsub("\\.SC2","-SC2",df.summ$name)
 
   df.summ<-merge(df.summ, df.pango, by="name",all=TRUE) #April 13 Nacho. Added all=TRUE to keep all records
   write.table(df.summ, gsub(".csv","_and_Pangolin.csv",csvs[grep(".*summaries.csv$", csvs)],), sep = "\t", quote = FALSE, row.names = FALSE)
