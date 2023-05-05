@@ -33,9 +33,6 @@ colnames(pangolin.table)[which(colnames(pangolin.table)=="Lineage")]<-"lineage" 
   if(warning.pango) df.pango$`most common countries`<-paste("OUTDATED:", df.pango$`most common countries`)
   
   df.summ<-read.csv(csvs[grep(".*summaries.csv$", csvs)], sep = "\t")
-
-  df.pango$name<-gsub("/.*","",df.pango$name) #Illumina fix
-  df.summ<- df.summ[-grep("i,a,", df.summ[,2]),] #Illumina fix
   
   df.summ<-t(df.summ)
   colnames(df.summ)<-df.summ[1,]
