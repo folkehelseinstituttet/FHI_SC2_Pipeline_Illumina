@@ -39,7 +39,15 @@ paste -d, NextcladeAndPangolin.out2.csv coverage2.csv > NextcladeAndPangolinAndC
 
 sed 's/,/\t/g' NextcladeAndPangolinAndCoverage.csv | sed 's/ORF10/ORF10\t/g' > ${runname}_NextcladeAndPangolin.csv
 
-Rscript /home/docker/Scripts/LongPangolinParser2.R
+
+source activate nextclade
+
+nextclade dataset get --name 'sars-cov-2' --output-dir '/home/docker/nc_sars-cov-2'
+nextclade --input-fasta ${runname}.fa --input-dataset /home/docker/nc_sars-cov-2 --output-csv ${runname}_Nextclade.new.results.csv
+
+conda deactivate
+
+Rscript LongPangolinParser3.R
 
 rm *results*
 rm *out*
