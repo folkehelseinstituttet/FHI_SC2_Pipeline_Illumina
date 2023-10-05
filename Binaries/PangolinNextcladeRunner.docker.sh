@@ -47,7 +47,7 @@ nextclade --input-fasta ${runname}.fa --input-dataset /home/docker/nc_sars-cov-2
 
 conda deactivate
 
-Rscript LongPangolinParser3.R
+Rscript /home/docker/Scripts/LongPangolinParser3.R
 
 rm *results*
 rm *out*
