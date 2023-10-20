@@ -466,7 +466,7 @@ cd "${basedir}"
 echo "QCPLOTTER"
 Rscript /home/docker/Scripts/CSAK_QCPlotter_docker.R
 
-echo "LONG  PANGOLIN PHRASER"
+echo "LONG  PANGOLIN PARSER"
 Rscript /home/docker/Scripts/LongPangolinParser.R
 
 echo "LW_FILE"

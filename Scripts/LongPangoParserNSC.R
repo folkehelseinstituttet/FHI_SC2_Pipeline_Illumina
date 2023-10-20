@@ -52,6 +52,25 @@ for (i in 1:length(file.vec) ) {
   }
   
   
+
+# Tessy -------------------------------------------------------------------
+
+tessy<-read.csv("https://www.ecdc.europa.eu/sites/default/files/documents/PathogenVariant_public_mappings.csv")
+results$Tessy<-NA
+if(nrow(tessy)>0){
+  for (i in 1:nrow(tessy)) {
+    to.replace<-grep(tessy$included.sub.lineages[i], results$pangolin_ivar_lineage)
+    if(length(to.replace)>0){
+      results$Tessy[to.replace]<-tessy$VirusVariant[i]
+    }
+    
+  }
+  
+}else{
+  results$Tessy<-"Error404"
+  
+}
+
   write.table(results, input , sep = "\t", quote = FALSE, row.names = FALSE)
   print(paste("Adding Full Pangolin to",input))
 }

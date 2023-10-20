@@ -30,6 +30,27 @@ if(nrow(pango.vars)>0){
   results$Pangolin_full[grep(" ",results$Pangolin_full)]<-NA  
 }
 
+
+
+
+# Tessy -------------------------------------------------------------------
+
+tessy<-read.csv("https://www.ecdc.europa.eu/sites/default/files/documents/PathogenVariant_public_mappings.csv")
+results$Tessy<-NA
+if(nrow(tessy)>0){
+  for (i in 1:nrow(tessy)) {
+    to.replace<-grep(tessy$included.sub.lineages[i], results$lineage)
+    if(length(to.replace)>0){
+      results$Tessy[to.replace]<-tessy$VirusVariant[i]
+    }
+    
+  }
+  
+}else{
+  results$Tessy<-"Error404"
+  
+}
+
 write.table(results, input , sep = "\t", quote = FALSE, row.names = FALSE)
 
 
