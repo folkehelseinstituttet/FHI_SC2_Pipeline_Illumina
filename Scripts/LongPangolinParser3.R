@@ -47,11 +47,11 @@ results<-merge(results, new.nc[,c("seqName","clade")], by="seqName")
 
 # Tessy -------------------------------------------------------------------
 
-tessy<-read.csv("https://www.ecdc.europa.eu/sites/default/files/documents/PathogenVariant_public_mappings.csv")
-colnames(tessy)<-c("VirusVariant","included.sub.lineages" )
+try(tessy<-read.csv("https://www.ecdc.europa.eu/sites/default/files/documents/PathogenVariant_public_mappings.csv"))
+try(colnames(tessy)<-c("VirusVariant","included.sub.lineages" ))
 results$Tessy<-NA
 
-if(nrow(tessy)>0){
+if(exists("tessy")){
   for (i in 1:nrow(tessy)) {
     to.replace<-grep(tessy$included.sub.lineages[i], results$lineage)
     if(length(to.replace)>0){
