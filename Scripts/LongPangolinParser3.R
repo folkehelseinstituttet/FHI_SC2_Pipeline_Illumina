@@ -50,7 +50,7 @@ results<-merge(results, new.nc[,c("seqName","clade")], by="seqName")
 tessy<-read.csv("https://www.ecdc.europa.eu/sites/default/files/documents/PathogenVariant_public_mappings.csv")
 colnames(tessy)<-c("VirusVariant","included.sub.lineages" )
 results$Tessy<-NA
-try(
+
 if(nrow(tessy)>0){
   for (i in 1:nrow(tessy)) {
     to.replace<-grep(tessy$included.sub.lineages[i], results$lineage)
@@ -64,7 +64,7 @@ if(nrow(tessy)>0){
   results$Tessy<-"Error404"
   
 }
-)
+
 write.table(results, input , sep = "\t", quote = FALSE, row.names = FALSE)
 
 
