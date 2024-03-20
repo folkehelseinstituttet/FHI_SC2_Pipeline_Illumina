@@ -68,7 +68,7 @@ fi
 
 
 if [[ ${1} ]]; then  
-if [ ${1} != "ArticV3" ]  && [ ${1} != "ArticV4" ]; then
+if [ ${1} != "ArticV5" ]  && [ ${1} != "ArticV4" ]; then
        echo "
   _  _ ___ _ 
  | \| | _ ) |
