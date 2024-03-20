@@ -59,6 +59,12 @@ STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-20
 primer_version="${STR:65:2}"
 
 fi
+if [ ${1} == "ArticV4" ]; then
+cp /home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V5.3.2/SARS-CoV-2.primer.bed /home/docker/Fastq/primers.bed
+STR="/home/docker/CommonFiles/artic-ncov2019/primer_schemes/nCoV-2019/V5.3.2/nCoV-2019.primer.bed /home/docker/Fastq/primers.bed"
+primer_version="${STR:65:4}"
+
+fi
 
 
 if [[ ${1} ]]; then  
